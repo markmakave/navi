@@ -1,0 +1,3 @@
+/Users/lumina/dev/autopilot/build/CMakeFiles/autopilot.dir
+/Users/lumina/dev/autopilot/build/CMakeFiles/edit_cache.dir
+/Users/lumina/dev/autopilot/build/CMakeFiles/rebuild_cache.dir

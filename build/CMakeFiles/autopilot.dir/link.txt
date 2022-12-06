@@ -1,0 +1,1 @@
+/Library/Developer/CommandLineTools/usr/bin/c++  -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/autopilot.dir/src/main.cpp.o -o autopilot  /usr/local/lib/libpng.dylib /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk/usr/lib/libz.tbd 
