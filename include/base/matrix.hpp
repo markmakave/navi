@@ -22,11 +22,6 @@ public:
     typedef unsigned            size_type;
     typedef int                 difference_type;
 
-protected:
-
-    pointer _data;
-    size_type _height, _width;
-
 public:
 
     /*
@@ -48,6 +43,20 @@ public:
         _width(width)
     {
         _allocate(size());
+    }
+
+    /*
+        @brief Constructor with height, width and fillament
+        @param height Height of the matrix
+        @param width Width of the matrix
+        @param fillament Value to fill the matrix with
+    */
+    matrix(size_type height, size_type width, const_reference fillament)
+    :   _height(height),
+        _width(width)
+    {
+        _allocate(size());
+        fill(fillament);
     }
 
     /*
@@ -447,7 +456,7 @@ public:
         #pragma omp parallel for reduction(+:det)
         for (size_type i = 0; i < _width; ++i)
         {
-            matrix minor(_width - 1, _height - 1);
+            matrix minor_submatrix(_width - 1, _height - 1);
 
             for (size_type y = 1; y < _height; ++y)
             {
@@ -459,11 +468,11 @@ public:
 
                     size_type minor_x = x < i ? x : x - 1;
 
-                    minor[minor_y][minor_x] = _data[y * _width + x];
+                    minor_submatrix[minor_y][minor_x] = _data[y * _width + x];
                 }
             }
 
-            det += _data[i] * minor.determinant() * (i % 2 == 0 ? 1 : -1);
+            det += _data[i] * minor_submatrix.determinant() * (i % 2 == 0 ? 1 : -1);
         }
 
         return det;
@@ -590,12 +599,16 @@ private:
     void
     _allocate(size_type size)
     {
-        if (size == 0) return;
+        if (size == 0)
+        {
+            _data = nullptr;
+            return;
+        }
 
         void* ptr = operator new(size * sizeof(value_type));
 
         if (ptr == nullptr)
-            throw std::runtime_error("matrix::_allocate: cannot allocate memory");
+            throw std::bad_alloc();
 
         _data = reinterpret_cast<value_type*>(ptr);
     }
@@ -607,6 +620,11 @@ private:
 
         operator delete(_data);
     }
+
+protected:
+
+    pointer _data;
+    size_type _height, _width;
 
 };
 

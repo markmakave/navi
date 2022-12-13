@@ -51,7 +51,6 @@ struct yuv
 
 struct rgb
 {
-
     // Base rgb color scheme components
     uint8_t r, g, b;
 
@@ -102,6 +101,15 @@ struct rgb
     }
 
 };
+
+const rgb white = { 255, 255, 255 };
+const rgb black = { 0, 0, 0 };
+const rgb red = { 255, 0, 0 };
+const rgb green = { 0, 255, 0 };
+const rgb blue = { 0, 0, 255 };
+const rgb yellow = { 255, 255, 0 };
+const rgb cyan = { 0, 255, 255 };
+const rgb magenta = { 255, 0, 255 };
 
 // RGBA 32bit color structure /////////////////////////////////////////////
 
