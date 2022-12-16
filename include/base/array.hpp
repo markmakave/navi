@@ -42,6 +42,13 @@ public:
             _data[i] = value;
     }
 
+    array(const std::function<value_type(size_type)>& func)
+    {
+        #pragma omp parallel for
+        for (size_t i = 0; i < N; ++i)
+            _data[i] = func(i);
+    }
+
     array(const array& other)
     {
         #pragma omp parallel for
@@ -236,6 +243,12 @@ public:
         for (size_t i = 0; i < _size; ++i)
             _data[i] = other._data[i];
     }
+
+    array(pointer data, size_type size)
+    :   _data(data),
+        _size(size),
+        _capacity(size)
+    {}
 
     array(array&& other)
     :   _data(other._data),

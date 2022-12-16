@@ -25,7 +25,6 @@ random_channel()
 struct yuv;
 struct rgb;
 struct rgba;
-
 typedef uint8_t gray;
 
 // YUYV ///////////////////////////////////////////////////////////////////
@@ -41,8 +40,7 @@ struct yuv
 
     //  Conversion constructor from rgb
     yuv(const rgb& color) {
-        // TODO
-
+             
     }
 
 };

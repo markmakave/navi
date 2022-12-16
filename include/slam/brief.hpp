@@ -4,26 +4,25 @@
 #include <bitset>
 #include <random>
 
-#include "shared/matrix.hpp"
-#include "shared/color.hpp"
-#include "shared/dim.hpp"
+#include "base/matrix.hpp"
+#include "graphics/color.hpp"
+#include "base/vec.hpp"
 
 namespace lm {
-namespace slam {
 
 template <unsigned N>
-class BRIEF
+class brief
 {
 
     unsigned radius;
-    std::array<std::pair<dim<2, int>, dim<2, int>>, N> net;
+    std::array<std::pair<dim2, dim2>, N> net;
 
 public:
 
     struct descriptor : public std::bitset<N>
     {};
 
-    BRIEF(unsigned radius)
+    brief(unsigned radius)
     :   radius(radius)
     {
 
@@ -64,5 +63,4 @@ public:
     }
 };
 
-}
 }

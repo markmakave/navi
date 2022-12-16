@@ -1,148 +1,155 @@
-const https = require('https');
-const http = require('http');
-const fs = require('fs');
-const net = require('net');
-const WebSocket = require('ws');
+const https = require('https')
+const webSocket = require('ws')
+const net = require('net')
+const fs = require("fs")
+const jpeg = require('jpeg-js')
 
-const webServer = createWebServer(8080, 'ssl/privkey.pem', 'ssl/fullchain.pem');
-const proxyServer = createProxyServer(8081);
+let dataCache = new Uint8Array(0)
 
-const dataServer = createDataServer('/tmp/pointcloud.sock');
-let dataCache = new Uint8Array(0);
-
-const webSocketServer = createWebSocketServer(webServer, dataServer);
-
-dataServer.on('connection', (socket) => {
-    console.log('[ DATA ] Client connected');
-
-    socket.on('data', (data) => {
-        const newData = new Uint8Array(dataCache.length + data.length);
-        newData.set(dataCache);
-        newData.set(data, dataCache.length);
-        dataCache = newData;
-
-        webSocketServer.clients.forEach((client) => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(data, { binary: true });
-            }
-        });
-    });
-
-    socket.on('close', () => {
-        console.log('[ DATA ] Client disconnected');
-    });
-});
-
-function createDataServer(socketFilename) {
-    const dataServer = net.createServer();
-
-    try {
-        fs.unlinkSync(socketFilename);
-    } catch (e) {}
-
-    dataServer.listen(socketFilename, () => {
-        console.log('[ DATA ] Pointcloud server listening on ' + socketFilename);
-    });
-
-    return dataServer;
+const options = {
+    key: fs.readFileSync('ssl/privkey.pem'),
+    cert: fs.readFileSync('ssl/fullchain.pem')
 }
 
-function createWebServer(port, key, cert) {
-    const options = {
-        key: fs.readFileSync(key),
-        cert: fs.readFileSync(cert)
-    };
+const webServer = https.createServer(options, (req, res) => {
+    // file format map
+    const fileFormatMap = {
+        'js': 'text/javascript',
+        'html': 'text/html',
+        'css': 'text/css',
+        'png': 'image/png',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'ico': 'image/x-icon',
+        'json': 'application/json',
+        'gif': 'image/gif',
+    }
+    
+    // get ipv4 address
+    const ipv4 = req.connection.remoteAddress.split(':').pop()
+    console.log('[ HTTP ] Client connected from ' + ipv4 + ' requested ' + req.url)
 
-    function handleApiRequest(req, res) {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.write(JSON.stringify({ pointCount: dataCache.length / 16 }));
-        res.end();
+    let requestedFile = req.url
+    if (requestedFile === '/') {
+        requestedFile = '/index.html'
     }
 
-    const webServer = https.createServer(options, (req, res) => {        
+    // get file extension
+    const fileExtension = requestedFile.split('.')[1]
 
-        let requestedFile = req.url;
+    // get content type
+    if (!fileFormatMap[fileExtension]) {
+        console.log('[ HTTP ] Unknown file extension: ' + fileExtension)
+        return
+    }
 
-        // get ipv4 address
-        const ipv4 = req.connection.remoteAddress.split(':').pop();
-        console.log('[ HTTP ] Client connectef from ' + ipv4 + ' requested ' + requestedFile); 
-        
-        if (requestedFile === '/') {
-            requestedFile = '/index.html';
-        }
-    
-        const fileExtension = requestedFile.split('.')[1];
-    
-        const contentTypeMap = {
-            'html': 'text/html',
-            'js': 'text/javascript',
-            'css': 'text/css',
-            'png': 'image/png',
-            'jpg': 'image/jpeg',
-            'jpeg': 'image/jpeg',
-            'ico': 'image/x-icon',
-            'json': 'application/json'
-        };
-    
-        const contentType = contentTypeMap[fileExtension];
-        if (!contentType) {
-            console.log('[ HTTP ] Unknown file extension: ' + fileExtension);
-            return;
-        }
+    const contentType = fileFormatMap[fileExtension]
+    res.writeHead(200, { 'Content-Type': contentType })
 
-        res.writeHead(200, { 'Content-Type': contentType });
-    
-        requestedFile = __dirname + "/html" + requestedFile;
-        try {
-            const file = fs.readFileSync(requestedFile);
-            res.write(file);
-        } catch (e) {
-            console.log('[ HTTP ] Error reading file: ' + e);
-            return;
-        }
-    
-        res.end();
-    });
+    requestedFile = __dirname + '/html' + requestedFile
+    try {
+        const file = fs.readFileSync(requestedFile)
+        res.write(file)
+    } catch (e) {
+        console.log('[ HTTP ] Error reading file: ' + e)
+    }
 
-    webServer.on('error', (err) => {
-        console.log('[ HTTP ] Web server error: ' + err);
-    });
+    res.end()
+})
 
-    webServer.listen(port, () => {
-        console.log('[ HTTP ] Web server listening on port ' + port);
-    });
+const pointWSS = new webSocket.Server({ noServer: true })
+pointWSS.on('connection', (socket) => {
+    console.log('[ POINT ] Client connected')
 
-    return webServer;
-}
+    const portionSize = 2 * 1024 * 1024
+    for (let i = 0; i < dataCache.length; i += portionSize) {
+        const portion = dataCache.slice(i, i + portionSize)
+        socket.send(portion, { binary: true })
+    }
 
-function createProxyServer(port) {
-    let proxyServer = http.createServer((req, res) => {
-        // get ipv4 address
-        const ipv4 = req.connection.remoteAddress.split(':').pop();
-        console.log('[ HTTP ] Redirecting ' + ipv4 + ' to https');
-        res.writeHead(301, { 'Location': 'https://' + req.headers.host + req.url });
-        res.end();
+    socket.on('close', () => {
+        console.log('[ POINT ] Client disconnected')
+    })
+})
+
+const videoWSS = new webSocket.Server({ noServer: true })
+videoWSS.on('connection', (socket) => {
+    console.log('[ VIDEO ] Client connected')    
+
+    socket.on('close', () => {
+        console.log('[ VIDEO ] Client disconnected')
+    })
+})
+
+const pointUSS = net.createServer()
+pointUSS.on('connection', (socket) => {
+    console.log('[ POINT ] Source connected')
+
+    socket.on('data', (data) => {
+        let newData = new Uint8Array(dataCache.length + data.length)
+        newData.set(dataCache)
+        newData.set(data, dataCache.length)
+        dataCache = newData
+
+        pointWSS.clients.forEach((client) => {
+            client.send(data, { binary: true })
+        })
     })
 
-    proxyServer.listen(port, () => {
-        console.log('[ HTTP ] Proxy server listening on port ' + port);
-    });
+    socket.on('close', () => {
+        console.log('[ POINT ] Source disconnected')
+    })
+})
 
-    return proxyServer;
+const videoUSS = net.createServer()
+videoUSS.on('connection', (socket) => {
+    console.log('[ VIDEO ] Source connected')
+    
+    let frameCache = new Uint8Array(0)
+
+    socket.on('data', (data) => {
+        videoWSS.clients.forEach((client) => {
+            client.send(data, { binary: true })
+        })
+    })
+
+    socket.on('close', () => {
+        console.log('[ VIDEO ] Source disconnected')
+    })
+})
+
+const port = 8080
+webServer.listen(port, () => {
+    console.log('[ HTTP ] Listening on port ' + port)
+})
+
+try {
+    fs.unlinkSync('/tmp/hertz_points.sock')
+} catch (e) {}
+pointUSS.listen('/tmp/hertz_points.sock', () => {
+    console.log('[ POINT ] Listening on /tmp/hertz_points.sock')
+})
+
+try {
+    fs.unlinkSync('/tmp/hertz_video.sock')
 }
+catch (e) {}
+videoUSS.listen('/tmp/hertz_video.sock', () => {
+    console.log('[ VIDEO ] Listening on /tmp/hertz_video.sock')
+})
 
-function createWebSocketServer(webServer, dataServer) {
-    const wss = new WebSocket.Server({ server: webServer });
+webServer.on('upgrade', (req, socket, head) => {
+    const pathname = req.url
 
-    // send cached data to new client
-    wss.on('connection', (ws) => {
-        console.log('[ WEBSOCKET ] Client connected');
-        ws.send(dataCache, { binary: true });
-    });
-
-    wss.on('close', () => {
-        console.log('[ WEBSOCKET ] Client disconnected');
-    });
-
-    return wss;
-}
+    if (pathname === '/points') {
+        pointWSS.handleUpgrade(req, socket, head, (ws) => {
+            pointWSS.emit('connection', ws, req)
+        })
+    } else if (pathname === '/video') {
+        videoWSS.handleUpgrade(req, socket, head, (ws) => {
+            videoWSS.emit('connection', ws, req)
+        })
+    } else {
+        socket.destroy()
+    }
+})

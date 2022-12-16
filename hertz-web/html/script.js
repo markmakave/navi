@@ -17,7 +17,7 @@ class PointcloudRenderer {
             uniform mat4 uMVP;
             void main() {
                 gl_Position = uMVP * vec4(aPosition, 1.0);
-                gl_PointSize = 10.0;
+                gl_PointSize = 5.0;
                 vColor = aColor;
             }
             `
@@ -92,108 +92,120 @@ class PointcloudRenderer {
 
 const renderer = new PointcloudRenderer();
 let consoleBody = document.getElementById("consoleBody");
+let statusBar = document.getElementById("statusBar");
+let stereoFrame = document.getElementById("stereoFrame");
+
+statusBar.src = "images/connecting.png";
+stereoFrame.src = "images/default.gif";
 
 let iter = 0;
-function connect() {
-    const socket = new WebSocket("wss://markmakave.com");
-
-    let statusBar = document.getElementById("statusBar");
+function connectPWS() {
+    const pointWS = new WebSocket("wss://markmakave.com/points");
 
     // accept binary data on connection
-    socket.binaryType = "arraybuffer";
+    pointWS.binaryType = "arraybuffer";
 
-    socket.onmessage = (event) => {
+    pointWS.onmessage = (event) => {
         let data = new Uint8Array(event.data);
+
         renderer.addPoints(data);
-        let p = document.createElement("p");
-        p.className = "info";
-        p.innerText = "[ INFO ] Received " + data.length + " bytes of point data.";
-        consoleBody.insertBefore(p, consoleBody.firstChild);
     }
 
-    socket.onopen = () => {
+    pointWS.onopen = () => {
         statusBar.src = "images/connected.png";
         renderer.data = new Uint8Array(0);
         renderer.pointCount = 0;
 
         let p = document.createElement("p");
         p.className = "info";
-        p.innerText = "[ INFO ] Connected to server.";
+        p.innerText = "[ POINT ] Connected to point server.";
         consoleBody.appendChild(p);
         consoleBody.insertBefore(p, consoleBody.firstChild);
     }
 
-    socket.onclose = () => {
+    pointWS.onclose = () => {
         statusBar.src = "images/connecting.png";
         let p = document.createElement("p");
         p.className = "error";
-        p.innerText = "[ ERROR ] Connection closed. Reconnecting...";
+        p.innerText = "[ POINT ] Connection lost. Reconnecting...";
         consoleBody.insertBefore(p, consoleBody.firstChild);
-        connect();
+        connectPWS();
     }
     
 }
 
-connect();
+function connectVWS() {
+    const videoWS = new WebSocket("wss://markmakave.com/video");
 
-// pause on right click
-let pause = false;
-document.oncontextmenu = () => {
-    pause = !pause;
-    return false;
+    videoWS.willReadFrequently = true;
+    videoWS.binaryType = "arraybuffer";
+
+    videoWS.onmessage = (event) => {
+        let data = new Uint8Array(event.data);
+        let blob = new Blob([data], {type: "image/jpeg"});
+        stereoFrame.src = URL.createObjectURL(blob);
+    }
+
+    videoWS.onopen = () => {
+        let p = document.createElement("p");
+        p.className = "info";
+        p.innerText = "[ VIDEO ] Connected to video server.";
+        consoleBody.insertBefore(p, consoleBody.firstChild);
+    }
+
+    videoWS.onclose = () => {
+        let p = document.createElement("p");
+        p.className = "error";
+        p.innerText = "[ VIDEO ] Connection lost. Reconnecting...";
+        consoleBody.insertBefore(p, consoleBody.firstChild);
+        stereoFrame.src = "images/default.gif";
+        connectVWS();
+    }
 }
+
+connectPWS();
+connectVWS();
 
 // switch renderer.mode on left click
 let mode = 0;
 document.onclick = () => {
-    mode = (mode + 1) % 5;
+    mode = (mode + 1) % 3;
     switch(mode) {
         case 0:
             renderer.mode = renderer.gl.POINTS;
             break;
         case 1:
-            renderer.mode = renderer.gl.LINES;
-            break;
-        case 2:
             renderer.mode = renderer.gl.LINE_STRIP;
             break;
-        case 3:
-            renderer.mode = renderer.gl.LINE_LOOP;
-            break;
-        case 4:
+        case 2:
             renderer.mode = renderer.gl.TRIANGLES;
             break;
     }
 }
 
 while (true) {
-    while(pause)
-    {
-        renderer.render();
-        await new Promise(r => setTimeout(r, 1000 / 60));
-    }
-
-    // matricies
     let model = mat4.create();
     let view = mat4.create();
     let projection = mat4.create();
     let mvp = mat4.create();
 
     // camera looks at origin from 5 units away in z
-    mat4.lookAt(view, [0, 0, 0], [0, 0, -1], [0, 1, 0]);
-    mat4.translate(view, view, [0, 0, -5]);
+    mat4.lookAt(view, [0, 0, 0], [0, 0, -1], [0, 1, 0])
+    mat4.translate(view, view, [0, 0, -5])
 
     // perspective projection
     mat4.perspective(projection, 45 * Math.PI / 180, renderer.canvas.width / renderer.canvas.height, 0.1, 100000);
 
+    let t = Date.now() / 1000;
+
     // model scales on each axis for breathing effect
-    let scale = 1 + Math.sin(Date.now() / 1000) / 2 - 0.45;
-    mat4.scale(model, model, [scale, scale, scale]);
+    let scale = 1 + Math.sin(t) / 4 - 0.25;
+    mat4.scale(model, model, [scale, scale, scale])
 
     // model rotates on each axis using sin with a different speed and offset
-    mat4.rotate(model, model, Math.sin(Date.now() / 5000 + 0) * Math.PI * 2, [1, 0, 0]);
-    mat4.rotate(model, model, Math.sin(Date.now() / 5000 + 5) * Math.PI * 2, [0, 1, 0]);
-    mat4.rotate(model, model, Math.sin(Date.now() / 5000 + 10) * Math.PI * 2, [0, 0, 1]);
+    mat4.rotate(model, model, Math.sin(t / 5 + 0) * Math.PI * 2, [1, 0, 0]);
+    mat4.rotate(model, model, Math.sin(t / 6 + 5) * Math.PI * 2, [0, 1, 0]);
+    mat4.rotate(model, model, Math.sin(t / 7 + 10) * Math.PI * 2, [0, 0, 1]);
 
     // multiply all matricies together
     mat4.multiply(mvp, projection, view);

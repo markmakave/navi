@@ -92,7 +92,7 @@ class pointcloud
 public:
 
     pointcloud()
-    :   _socket("/tmp/pointcloud.sock")
+    :   _socket("/tmp/hertz_points.sock")
     {
         lm::log::info("Pointcloud initialized");
     }
