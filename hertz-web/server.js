@@ -2,7 +2,6 @@ const https = require('https')
 const webSocket = require('ws')
 const net = require('net')
 const fs = require("fs")
-const jpeg = require('jpeg-js')
 
 let dataCache = new Uint8Array(0)
 

@@ -5,7 +5,7 @@
 
 namespace lm {
 
-#define LOG_PROPERTY static inline const char*
+#define LOG_PROPERTY static inline const char* const
 
 class log
 {
@@ -19,55 +19,81 @@ public:
     LOG_PROPERTY cyan    = "\033[36m";
     LOG_PROPERTY clear   = "\033[0m";
 
-    LOG_PROPERTY info_label    = "[ INFO ]";
-    LOG_PROPERTY info_color    = cyan;
+    struct config {
+        std::ostream& stream;
+        const char* label;
+        const char* color;
+        const char* separator;
+        const char* terminator;
+    };
 
-    LOG_PROPERTY debug_label   = "[ DEBUG ]";
-    LOG_PROPERTY debug_color   = magenta;
+    static inline const config info_config = {
+        std::cout,
+        "[ INFO ]",
+        cyan,
+        " ",
+        "\n"
+    };
 
-    LOG_PROPERTY warning_label = "[ WARNING ]";
-    LOG_PROPERTY warning_color = yellow;
+    static inline const config debug_config = {
+        std::cout,
+        "[ DEBUG ]",
+        magenta,
+        " ",
+        "\n"
+    };
 
-    LOG_PROPERTY error_label   = "[ ERROR ]";
-    LOG_PROPERTY error_color   = red;
+    static inline const config warning_config = {
+        std::cout,
+        "[ WARNING ]",
+        yellow,
+        " ",
+        "\n"
+    };
 
-    LOG_PROPERTY separator     = " ";
-    LOG_PROPERTY terminator    = "\n";
+    static inline const config error_config = {
+        std::cerr,
+        "[ ERROR ]",
+        red,
+        " ",
+        "\n"
+    };
+
+    template <typename ...Args>
+    static void
+    print(const config& cfg, const Args&... args)
+    {
+        cfg.stream << cfg.color;
+        console(cfg, cfg.label, date(), args...);
+        cfg.stream << clear;
+    }
 
     template <typename ...Args>
     static void
     info(const Args&... args)
     {
-        std::cout << info_color;
-        console(std::cout, info_label, date(), args...);
-        std::cout << clear;
+        print(info_config, args...);
     }
 
     template <typename ...Args>
     static void
     debug(const Args&... args)
     {
-        std::cout << debug_color;
-        console(std::cout, debug_label, date(), args...);
-        std::cout << clear;
+        print(debug_config, args...);
     }
 
     template <typename ...Args>
     static void
     warning(const Args&... args)
     {
-        std::cout << warning_color;
-        console(std::cout, warning_label, date(), args...);
-        std::cout << clear;
+        print(warning_config, args...);
     }
 
     template <typename ...Args>
     static void
     error(const Args&... args)
     {
-        std::cerr << error_color;
-        console(std::cerr, error_label, date(), args...);
-        std::cerr << clear;
+        print(error_config, args...);
     }
 
 private:
@@ -81,17 +107,17 @@ private:
 
     template <typename Arg>
     static void
-    console(std::ostream& stream, const Arg& arg)
+    console(const config& conf, const Arg& arg)
     {
-        stream << arg << terminator << std::flush;
+        conf.stream << arg << conf.terminator << std::flush;
     }
 
     template <typename Arg, typename ...Args>
     static void
-    console(std::ostream& stream, const Arg& arg, const Args& ...args)
+    console(const config& conf, const Arg& arg, const Args& ...args)
     {
-        stream << arg << separator;
-        console(stream, args...);
+        conf.stream << arg << conf.separator;
+        console(conf, args...);
     }
 
     static
@@ -105,6 +131,7 @@ private:
         return buf;
     }
 
+    #undef LOG_PROPERTY
 };
 
 }

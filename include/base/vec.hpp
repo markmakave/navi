@@ -258,7 +258,6 @@ public:
     {
         vec<N, T> r;
 
-        #pragma omp simd
         for (unsigned i = 0; i < N; i++)
             r[i] = this->_data[i] * v[i];
 

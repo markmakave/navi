@@ -8,9 +8,9 @@ namespace lm {
 template <typename, unsigned ...dummy>
 struct array;
 
-/*
-    @brief Static array.
-*/
+/// @brief Constant size array.
+/// @tparam T Type of array elements.
+/// @tparam N Size of array.
 template <typename T, unsigned N>
 struct array<T, N>
 {
@@ -28,80 +28,92 @@ public:
 
 public:
 
+    /// @brief Default constructor.
     array()
     {
-        #pragma omp parallel for
         for (size_t i = 0; i < N; ++i)
             _data[i] = value_type();
     }
 
+    /// @brief Constructor with initializer value.
+    /// @param value Initial value for all elements.
     array(const value_type& value)
     {
-        #pragma omp parallel for
         for (size_t i = 0; i < N; ++i)
             _data[i] = value;
     }
 
+    /// @brief Constructor with initializer function.
+    /// @param func Function that returns initial value for each element.
     array(const std::function<value_type(size_type)>& func)
     {
-        #pragma omp parallel for
         for (size_t i = 0; i < N; ++i)
             _data[i] = func(i);
     }
 
+    /// @brief Copy constructor.
     array(const array& other)
     {
-        #pragma omp parallel for
         for (size_t i = 0; i < N; ++i)
             _data[i] = other._data[i];
     }
 
+    /// @brief Move constructor.
     array(array&& other)
     {
-        #pragma omp parallel for
         for (size_t i = 0; i < N; ++i)
             _data[i] = other._data[i];
     }
 
+    /// @brief Destructor.
     ~array()
     {}
 
+    /// @brief Copy assignment operator.
     array&
     operator = (const array& other)
     {
         if (this == &other) return *this;
 
-        #pragma omp parallel for
         for (size_t i = 0; i < N; ++i)
             _data[i] = other._data[i];
 
         return *this;
     }
 
+    /// @brief Move assignment operator.
     array&
     operator = (array&& other)
     {
         if (this == &other) return *this;
 
-        #pragma omp parallel for
         for (size_t i = 0; i < N; ++i)
             _data[i] = other._data[i];
 
         return *this;
     }
 
+    /// @brief Element access operator.
+    /// @param index Index of element.
+    /// @return Reference to element.
     reference
     operator [] (size_type index)
     {
         return _data[index];
     }
 
+    /// @brief Element access operator.
+    /// @param index Index of element.
+    /// @return Constant reference to element.
     const_reference
     operator [] (size_type index) const
     {
         return _data[index];
     }
 
+    /// @brief Element access operator with bounds checking.
+    /// @param index Index of element.
+    /// @return Reference to element.
     reference
     at(size_type index)
     {
@@ -111,6 +123,9 @@ public:
         return _data[index];
     }
 
+    /// @brief Element access operator with bounds checking.
+    /// @param index Index of element.
+    /// @return Constant reference to element.
     const_reference
     at(size_type index) const
     {
@@ -120,36 +135,56 @@ public:
         return _data[index];
     }
 
+    /// @brief First element access.
+    /// @return Reference to first element.
     reference
     front()
     {
         return _data[0];
     }
 
+    /// @brief First element access.
+    /// @return Constant reference to first element.
     const_reference
     front() const
     {
         return _data[0];
     }
 
+    /// @brief Last element access.
+    /// @return Reference to last element.
     reference
     back()
     {
         return _data[N - 1];
     }
 
+    /// @brief Last element access.
+    /// @return Constant reference to last element.
     const_reference
     back() const
     {
         return _data[N - 1];
     }
 
+    /// @brief Size getter.
+    /// @return Size of array.
+    size_type
+    size() const
+    {
+        return N;
+    }
+
+    /// @brief Data pointer getter.
+    /// @return Pointer to data.
     pointer
     data()
     {
         return _data;
     }
 
+    /// @brief Data pointer getter.
+    /// @return Constant pointer to data.
     const_pointer
     data() const
     {
@@ -230,16 +265,15 @@ public:
     :   _size(size),
         _capacity(size)
     {
-        _data = _allocate(_capacity);
+        _allocate(_capacity);
     }
 
     array(const array& other)
     :   _size(other._size),
         _capacity(other._size)
     {
-        _data = _allocate(_capacity);
+        _allocate(_capacity);
 
-        #pragma omp parallel for
         for (size_t i = 0; i < _size; ++i)
             _data[i] = other._data[i];
     }
@@ -260,9 +294,20 @@ public:
         other._capacity = 0;
     }
 
+    array(const std::initializer_list<value_type>& list)
+    :   _size(list.size()),
+        _capacity(list.size())
+    {
+        _allocate(_capacity);
+
+        size_t i = 0;
+        for (auto it = list.begin(); it != list.end(); ++it)
+            _data[i++] = *it;
+    }
+
     ~array()
     {
-        _deallocate(_data);
+        _deallocate();
     }
 
     array&
@@ -270,13 +315,12 @@ public:
     {
         if (this == &other) return *this;
 
-        _deallocate(_data);
+        _deallocate();
 
         _size = other._size;
         _capacity = other._size;
-        _data = _allocate(_capacity);
+        _allocate(_capacity);
 
-        #pragma omp parallel for
         for (size_t i = 0; i < _size; ++i)
             _data[i] = other._data[i];
 
@@ -288,7 +332,7 @@ public:
     {
         if (this == &other) return *this;
 
-        _deallocate(_data);
+        _deallocate();
 
         _data = other._data;
         _size = other._size;
@@ -297,6 +341,22 @@ public:
         other._data = nullptr;
         other._size = 0;
         other._capacity = 0;
+
+        return *this;
+    }
+
+    array&
+    operator = (const std::initializer_list<value_type>& list)
+    {
+        _deallocate();
+
+        _size = list.size();
+        _capacity = list.size();
+        _allocate(_capacity);
+
+        size_t i = 0;
+        for (auto it = list.begin(); it != list.end(); ++it)
+            _data[i++] = *it;
 
         return *this;
     }
@@ -426,13 +486,16 @@ public:
     {
         if (size <= _capacity) return;
 
-        pointer new_data = _allocate(size);
+        pointer old_data = _data;
 
-        #pragma omp parallel for
+        _allocate(size);
+        pointer new_data = _data;
+
         for (size_t i = 0; i < _size; ++i)
-            new_data[i] = _data[i];
+            new_data[i] = old_data[i];
 
-        _deallocate(_data);
+        _data = old_data;
+        _deallocate();
 
         _data = new_data;
         _capacity = size;
@@ -469,7 +532,6 @@ public:
     pop()
     {
         if (_size == 0) return;
-
         --_size;
     }
 
@@ -490,27 +552,11 @@ public:
         _size = size;
     }
 
-    void
-    resize(size_type size, const_reference value)
-    {
-        if (size > _capacity)
-        {
-            reserve(size);
-        }
-
-        #pragma omp parallel for
-        for (size_t i = _size; i < size; ++i)
-            _data[i] = value;
-
-        _size = size;
-    }
-
     value_type
     sum() const
     {
         value_type sum = 0;
 
-        #pragma omp parallel for reduction(+:sum)
         for (size_t i = 0; i < _size; ++i)
             sum += _data[i];
 
@@ -528,7 +574,6 @@ public:
     {
         value_type min = _data[0];
 
-        #pragma omp parallel for reduction(min:min)
         for (size_t i = 1; i < _size; ++i)
             min = std::min(min, _data[i]);
 
@@ -540,7 +585,6 @@ public:
     {
         value_type max = _data[0];
 
-        #pragma omp parallel for reduction(max:max)
         for (size_t i = 1; i < _size; ++i)
             max = std::max(max, _data[i]);
 
@@ -550,37 +594,33 @@ public:
     void
     affect(std::function<value_type(value_type)> f)
     {
-        #pragma omp parallel for
         for (size_t i = 0; i < _size; ++i)
             _data[i] = f(_data[i]);
     }
 
 private:
 
-    static
-    pointer
+    void
     _allocate(size_type size)
     {
         if (size == 0)
         {
-            return nullptr;
+            _data = nullptr;
+            return;
         }
 
-        void* ptr = operator new(size * sizeof(value_type));
+        void* ptr = new value_type[size];
 
         if (ptr == nullptr)
             throw std::bad_alloc();
 
-        return reinterpret_cast<value_type*>(ptr);
+        _data = reinterpret_cast<pointer>(ptr);
     }
 
-    static
     void
-    _deallocate(pointer ptr)
+    _deallocate()
     {
-        if (ptr == nullptr) return;
-
-        operator delete(ptr);
+        delete[] _data;
     }
 
 protected:

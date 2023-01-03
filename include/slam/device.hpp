@@ -7,6 +7,7 @@
 #include <sys/ioctl.h>
 
 namespace lm {
+namespace slam {
 
 class device
 {
@@ -50,4 +51,5 @@ protected:
 
 };
 
-}
+} // namespace slam
+} // namespace lm

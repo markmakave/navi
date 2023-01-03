@@ -5,6 +5,8 @@
 #include <fstream>
 #include <stdexcept>
 
+#include <cstring>
+#include <cerrno>
 #include <cstdint>
 
 #include <unistd.h> 
@@ -13,10 +15,11 @@
 #include <linux/videodev2.h>
 
 #include "slam/device.hpp"
-#include "base/matrix.hpp"
-#include "graphics/color.hpp"
+#include "base/color.hpp"
+#include "base/image.hpp"
 
 namespace lm {
+namespace slam {
 
 // Camera device class (OS dependent) /////////////////////////////////////
 
@@ -26,14 +29,12 @@ public:
 
 // Constructors ///////////////////////////////////////////////////////////
     
-    camera(int id, unsigned width = 640, unsigned height = 480, int buffer_count = 10) 
-    :   device((std::string("/dev/video") + std::to_string(id)).c_str()), 
-        id(id),
+    camera(const char* filename, unsigned width = 640, unsigned height = 480, int buffer_count = 1) 
+    :   device(filename),
         width(width),
         height(height), 
         streaming(false)
     {
-
         buffers.resize(buffer_count);
 
         _pass_format();
@@ -43,18 +44,18 @@ public:
 
 // Device info printing method ////////////////////////////////////////////
 
-    void info() override {
+    void
+    info() override {
         v4l2_capability cap;
         if (ioctl(VIDIOC_QUERYCAP, &cap) != 0) {
             throw std::runtime_error("Camera info request failed");
         }
 
         std::cout <<
-            "Camera #" << id << "\n\t" <<
-                "Driver:        " << cap.driver   << "\n\t" <<
-                "Card:          " << cap.card     << "\n\t" <<
-                "Bus info:      " << cap.bus_info << "\n\t" <<
-                "Capabilities:  \n";
+            "Driver:        " << cap.driver   << "\n\t" <<
+            "Card:          " << cap.card     << "\n\t" <<
+            "Bus info:      " << cap.bus_info << "\n\t" <<
+            "Capabilities:  \n";
 
         
         if(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)
@@ -76,7 +77,8 @@ public:
 
 // Camera streaming start method //////////////////////////////////////////
 
-    void start() {
+    void
+    start() {
         int type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         if (ioctl(VIDIOC_STREAMON, &type) != 0) {
             throw std::runtime_error("Camera stream starting failed");
@@ -97,7 +99,8 @@ public:
 
 // Camera streaming stop method ///////////////////////////////////////////
 
-    void stop() {
+    void
+    stop() {
         int type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         if (ioctl(VIDIOC_STREAMOFF, &type) != 0) {
             throw std::runtime_error("Camera stream stoping failed");
@@ -108,7 +111,7 @@ public:
 // Camera grayscale frame capturing method ////////////////////////////////
 
     camera&
-    operator >> (matrix<uint8_t>& frame) {
+    operator >> (image<lm::gray>& frame) {
         if (width != frame.width() || height != frame.height()) {
             frame.resize(width, height);
         }
@@ -139,7 +142,7 @@ public:
 // Camera rgba frame capturing method /////////////////////////////////////
 
     camera&
-    operator >> (matrix<rgb>& frame) {
+    operator >> (image<rgb>& frame) {
         if (width != frame.width() || height != frame.height()) {
             frame.resize(width, height);
         }
@@ -156,14 +159,14 @@ public:
             throw std::runtime_error("Camera buffer dequeuing failed");
         }
 
-        for (size_t pixel = 0, offset = 0; pixel < frame.size(); pixel += 2, offset += 4) {
-            uint8_t y1  = buffers[buf.index][offset + 0];
-            uint8_t u   = buffers[buf.index][offset + 1];
-            uint8_t y2  = buffers[buf.index][offset + 2];
-            uint8_t v   = buffers[buf.index][offset + 3];
+        for (size_t i = 0; i < frame.size() / 2; ++i) {
+            uint8_t y1  = buffers[buf.index][i * 4 + 0];
+            uint8_t u   = buffers[buf.index][i * 4 + 1];
+            uint8_t y2  = buffers[buf.index][i * 4 + 2];
+            uint8_t v   = buffers[buf.index][i * 4 + 3];
 
-            frame.data()[pixel]        = rgb(yuv(y1, u, v));
-            frame.data()[pixel + 1]    = rgb(yuv(y2, u, v));
+            frame.data()[i * 2 + 0] = rgb(yuv(y1, u, v));
+            frame.data()[i * 2 + 1] = rgb(yuv(y2, u, v));
         }
 
         if(ioctl(VIDIOC_QBUF, &buf) != 0) {
@@ -229,13 +232,16 @@ private:
 
 private:
 
-    int id;
     unsigned width, height;
     std::vector<uint8_t*> buffers;
     bool streaming;
 
 };
 
-///////////////////////////////////////////////////////////////////////////
+} // namespace slam
+} // namespace lm
 
-}
+
+// how to set camera exposure to manual mode using v4l2-ctl
+// v4l2-ctl -d /dev/video0 -c exposure_auto=1
+// v4l2-ctl -d /dev/video0 -c exposure_absolute=100

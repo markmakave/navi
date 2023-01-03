@@ -92,11 +92,9 @@ class PointcloudRenderer {
 
 const renderer = new PointcloudRenderer();
 let consoleBody = document.getElementById("consoleBody");
-let statusBar = document.getElementById("statusBar");
 let stereoFrame = document.getElementById("stereoFrame");
 
-statusBar.src = "images/connecting.png";
-stereoFrame.src = "images/default.gif";
+stereoFrame.src = "images/na.png";
 
 let iter = 0;
 function connectPWS() {
@@ -112,7 +110,6 @@ function connectPWS() {
     }
 
     pointWS.onopen = () => {
-        statusBar.src = "images/connected.png";
         renderer.data = new Uint8Array(0);
         renderer.pointCount = 0;
 
@@ -124,7 +121,6 @@ function connectPWS() {
     }
 
     pointWS.onclose = () => {
-        statusBar.src = "images/connecting.png";
         let p = document.createElement("p");
         p.className = "error";
         p.innerText = "[ POINT ] Connection lost. Reconnecting...";
@@ -158,7 +154,7 @@ function connectVWS() {
         p.className = "error";
         p.innerText = "[ VIDEO ] Connection lost. Reconnecting...";
         consoleBody.insertBefore(p, consoleBody.firstChild);
-        stereoFrame.src = "images/default.gif";
+        stereoFrame.src = "images/na.png";
         connectVWS();
     }
 }

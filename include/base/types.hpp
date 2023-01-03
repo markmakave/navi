@@ -21,9 +21,9 @@ typedef float               f32;
 typedef double              f64;
 typedef long double         f128;
 
-typedef i8                  byte;
-typedef i16                 word;
-typedef i32                 dword;
-typedef i64                 qword;
+typedef u8                  byte;
+typedef u16                 word;
+typedef u32                 dword;
+typedef u64                 qword;
 
 }

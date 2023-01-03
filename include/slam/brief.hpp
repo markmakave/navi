@@ -5,10 +5,13 @@
 #include <random>
 
 #include "base/matrix.hpp"
-#include "graphics/color.hpp"
+#include "base/color.hpp"
 #include "base/vec.hpp"
 
 namespace lm {
+namespace slam {
+
+struct feature;
 
 template <unsigned N>
 class brief
@@ -19,8 +22,7 @@ class brief
 
 public:
 
-    struct descriptor : public std::bitset<N>
-    {};
+    typedef std::bitset<N> descriptor;
 
     brief(unsigned radius)
     :   radius(radius)
@@ -39,21 +41,8 @@ public:
         }
     }
 
-    descriptor
-    operator()(const matrix<gray> &frame, unsigned x, unsigned y) const
-    {
-        if (x < radius or y < radius or x >= frame.width() - radius or y >= frame.height() - radius) return {};
-
-        descriptor desc;
-
-        for (unsigned i = 0; i < net.size(); ++i)
-        {
-            const auto& pair = net[i];
-            desc[i] = frame[y + pair.first.y()][x + pair.first.x()] < frame[y + pair.second.y()][x + pair.second.x()];
-        }
-
-        return desc;   
-    }
+    void
+    compute(const matrix<gray> &frame, feature& f) const;
 
     static
     unsigned
@@ -63,4 +52,31 @@ public:
     }
 };
 
+struct feature
+{
+    unsigned x, y;
+    brief<256>::descriptor descriptor = 0;
+};
+
+template <unsigned N>
+void
+brief<N>::compute(const matrix<gray> &frame, feature& f) const
+{
+    if (f.x < radius || f.x >= frame.width() - radius || f.y < radius || f.y >= frame.height() - radius)
+        return;
+
+    for (unsigned i = 0; i < N; ++i)
+    {
+        auto& pair = net[i];
+        auto& p1 = pair.first;
+        auto& p2 = pair.second;
+
+        auto& v1 = frame[f.y + p1.y()][f.x + p1.x()];
+        auto& v2 = frame[f.y + p2.y()][f.x + p2.x()];
+
+        f.descriptor[i] = v1 < v2;
+    }
 }
+
+} // namespace slam
+} // namespace lm
