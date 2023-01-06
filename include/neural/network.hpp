@@ -3,7 +3,10 @@
 #include <base/array.hpp>
 #include <base/matrix.hpp>
 
-#include <cmath>
+#include <neural/blas.hpp>
+#include <neural/layer.hpp>
+
+#include <array>
 
 namespace lm {
 namespace neural {
@@ -18,21 +21,11 @@ public:
     template<typename... Args>
     network(Args... args)
     {
-        _weights = lm::array<lm::matrix<double>>(sizeof...(Args) - 1);
-        _biases = lm::array<lm::matrix<double>>(sizeof...(Args) - 1);
+        array<int, sizeof...(Args)> sizes = { args... };
 
-        lm::array<int> sizes = {args...};
-
-        for (unsigned i = 0; i < _weights.size(); ++i)
+        for (unsigned i = 0; i < sizes.size() - 1; ++i)
         {
-            _weights[i] = lm::matrix<double>(sizes[i + 1], sizes[i]);
-            _biases[i] = lm::matrix<double>(sizes[i + 1], 1);
-        }
-
-        for (unsigned i = 0; i < _weights.size(); ++i)
-        {
-            _weights[i].randomize();
-            _biases[i].randomize();
+            _layers.push(layer(sizes[i], sizes[i + 1]));
         }
     }
 
@@ -41,21 +34,14 @@ public:
     /// @return Matrix-column of output values
     lm::matrix<double>
     forward(lm::matrix<double> input)
-    {  
-        if (input.height() != _weights[0].width())
+    {   
+        for (auto& layer : _layers)
         {
-            throw std::runtime_error("input size mismatch");
+            layer.forward(input);
+            input = layer.neurons();
         }
 
-        lm::matrix<double> output = input;
-
-        for (unsigned i = 0; i < _weights.size(); ++i)
-        {
-            output = _weights[i] * output + _biases[i];
-            output = output.map([](double x) { return std::tanh(x); });
-        }
-
-        return output;
+        return input;
     }
 
     /// @brief Train the network
@@ -65,52 +51,28 @@ public:
     double
     train(const matrix<double>& input, const matrix<double>& target, double learning_rate)
     {
-        if (input.height() != _weights[0].width())
+        if (input.height() != _layers.front().in_size() || target.height() != _layers.back().out_size())
         {
-            throw std::runtime_error("input size mismatch");
+            throw std::runtime_error("Invalid input or target size");
         }
-
-        if (target.height() != _weights[_weights.size() - 1].height())
-        {
-            throw std::runtime_error("target size mismatch");
-        }
-
+        
         matrix<double> output = forward(input);
 
-        matrix<double> error = target - output;
-        error = error.map([](double x) { return std::pow(x, 2); });
-        double total_error = error.sum();
+        matrix<double> error = output - target;
+        error = error.map([](double x) { return x * x; });
 
-        matrix<double> gradient = output.map([](double x) { return 1 - std::pow(std::tanh(x), 2); });
-        gradient = gradient * error;
-        gradient = gradient * learning_rate;
+        for (int i = _layers.size() - 1; i > 0; --i)
+        {
+            _layers[i].backpropagate(_layers[i - 1].neurons(), error, learning_rate);
+        }
+        _layers.front().backpropagate(input, error, learning_rate);
 
-        matrix<double> delta = gradient * input.transpose();
-
-        _weights[_weights.size() - 1] = _weights.back() + delta;
-        _biases[_biases.size() - 1] = _biases.back() + gradient;
-
-
-        // for (unsigned i = _weights.size() - 2; i > 0; --i)
-        // {
-        //     gradient = _weights[i + 1].transpose() * gradient;
-        //     gradient = gradient.map([](double x) { return 1 - std::pow(std::tanh(x), 2); });
-        //     gradient = gradient * error;
-        //     gradient = gradient * learning_rate;
-
-        //     delta = gradient * input.transpose();
-
-        //     _weights[i] = _weights[i] + delta;
-        //     _biases[i] = _biases[i] + gradient;
-        // }
-
-        return total_error;
+        return error.sum();
     }
 
 private:
     
-    lm::array<lm::matrix<double>> _weights;
-    lm::array<lm::matrix<double>> _biases;
+    array<layer> _layers;
 
 };
     

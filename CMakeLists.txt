@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
-set(CMAKE_C_COMPILER /usr/bin/gcc-11)
-set(CMAKE_CXX_COMPILER /usr/bin/g++-11)
+set(CMAKE_C_COMPILER /usr/bin/gcc-12)
+set(CMAKE_CXX_COMPILER /usr/bin/g++-12)
 
 project(lumina LANGUAGES C CXX)
 
@@ -10,7 +10,7 @@ find_package(JPEG REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-g -O0 -Wall -fopenmp")
+set(CMAKE_CXX_FLAGS "-g -O3 -Wall")
 
 add_executable(autopilot ./src/autopilot/main.cpp)
 target_include_directories(autopilot PUBLIC ./include ${PNG_INCLUDE_DIRS})

@@ -35,20 +35,15 @@ public:
             _data[i] = value_type();
     }
 
-    /// @brief Constructor with initializer value.
-    /// @param value Initial value for all elements.
-    array(const value_type& value)
+    /// @brief Initializer list constructor.
+    array(std::initializer_list<value_type> list)
     {
-        for (size_t i = 0; i < N; ++i)
-            _data[i] = value;
-    }
+        if (list.size() != N)
+            throw std::runtime_error("Invalid initializer list size");
 
-    /// @brief Constructor with initializer function.
-    /// @param func Function that returns initial value for each element.
-    array(const std::function<value_type(size_type)>& func)
-    {
-        for (size_t i = 0; i < N; ++i)
-            _data[i] = func(i);
+        size_t i = 0;
+        for (auto& item : list)
+            _data[i++] = item;
     }
 
     /// @brief Copy constructor.
@@ -96,7 +91,7 @@ public:
     /// @brief Element access operator.
     /// @param index Index of element.
     /// @return Reference to element.
-    reference
+    constexpr reference
     operator [] (size_type index)
     {
         return _data[index];
@@ -105,7 +100,7 @@ public:
     /// @brief Element access operator.
     /// @param index Index of element.
     /// @return Constant reference to element.
-    const_reference
+    constexpr const_reference
     operator [] (size_type index) const
     {
         return _data[index];
@@ -114,7 +109,7 @@ public:
     /// @brief Element access operator with bounds checking.
     /// @param index Index of element.
     /// @return Reference to element.
-    reference
+    constexpr reference
     at(size_type index)
     {
         if (index >= N)
@@ -126,7 +121,7 @@ public:
     /// @brief Element access operator with bounds checking.
     /// @param index Index of element.
     /// @return Constant reference to element.
-    const_reference
+    constexpr const_reference
     at(size_type index) const
     {
         if (index >= N)
@@ -137,7 +132,7 @@ public:
 
     /// @brief First element access.
     /// @return Reference to first element.
-    reference
+    constexpr reference
     front()
     {
         return _data[0];
@@ -145,7 +140,7 @@ public:
 
     /// @brief First element access.
     /// @return Constant reference to first element.
-    const_reference
+    constexpr const_reference
     front() const
     {
         return _data[0];
@@ -153,7 +148,7 @@ public:
 
     /// @brief Last element access.
     /// @return Reference to last element.
-    reference
+    constexpr reference
     back()
     {
         return _data[N - 1];
@@ -161,7 +156,7 @@ public:
 
     /// @brief Last element access.
     /// @return Constant reference to last element.
-    const_reference
+    constexpr const_reference
     back() const
     {
         return _data[N - 1];
@@ -169,7 +164,7 @@ public:
 
     /// @brief Size getter.
     /// @return Size of array.
-    size_type
+    constexpr size_type
     size() const
     {
         return N;
@@ -177,7 +172,7 @@ public:
 
     /// @brief Data pointer getter.
     /// @return Pointer to data.
-    pointer
+    constexpr pointer
     data()
     {
         return _data;
@@ -185,31 +180,31 @@ public:
 
     /// @brief Data pointer getter.
     /// @return Constant pointer to data.
-    const_pointer
+    constexpr const_pointer
     data() const
     {
         return _data;
     }
 
-    iterator
+    constexpr iterator
     begin()
     {
         return _data;
     }
 
-    const_iterator
+    constexpr const_iterator
     begin() const
     {
         return _data;
     }   
 
-    iterator
+    constexpr iterator
     end()
     {
         return _data + N;
     }
 
-    const_iterator
+    constexpr const_iterator
     end() const
     {
         return _data + N;
@@ -439,12 +434,6 @@ public:
         return _data;
     }
 
-    const_iterator
-    cbegin() const
-    {
-        return _data;
-    }
-
     iterator
     end()
     {
@@ -457,10 +446,79 @@ public:
         return _data + _size;
     }
 
-    const_iterator
-    cend() const
+    struct reverse_iterator
     {
-        return _data + _size;
+        reverse_iterator(pointer ptr)
+        :   _ptr(ptr)
+        {}
+
+        reverse_iterator&
+        operator ++ ()
+        {
+            --_ptr;
+            return *this;
+        }
+
+        reverse_iterator
+        operator ++ (int)
+        {
+            reverse_iterator tmp = *this;
+            --_ptr;
+            return tmp;
+        }
+
+        reverse_iterator&
+        operator -- ()
+        {
+            ++_ptr;
+            return *this;
+        }
+
+        reverse_iterator
+        operator -- (int)
+        {
+            reverse_iterator tmp = *this;
+            ++_ptr;
+            return tmp;
+        }
+
+        reference
+        operator * ()
+        {
+            return *_ptr;
+        }
+
+        pointer
+        operator -> ()
+        {
+            return _ptr;
+        }
+
+        bool
+        operator == (const reverse_iterator& other) const
+        {
+            return _ptr == other._ptr;
+        }
+
+        bool
+        operator != (const reverse_iterator& other) const
+        {
+            return _ptr != other._ptr;
+        }
+
+        pointer _ptr;
+    };
+    
+    reverse_iterator
+    rbegin()
+    {
+        return reverse_iterator(_data + _size - 1);
+    }
+
+    reverse_iterator
+    rend()
+    {
+        return reverse_iterator(_data - 1);
     }
 
     bool
@@ -609,7 +667,7 @@ private:
             return;
         }
 
-        void* ptr = new value_type[size];
+        void* ptr = operator new(size * sizeof(value_type));
 
         if (ptr == nullptr)
             throw std::bad_alloc();
@@ -620,7 +678,7 @@ private:
     void
     _deallocate()
     {
-        delete[] _data;
+        operator delete(_data);
     }
 
 protected:

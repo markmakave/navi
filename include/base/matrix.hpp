@@ -46,18 +46,6 @@ public:
         _allocate(size());
     }
 
-    /// @brief Constructor with height, width and fillament
-    /// @param height Height of the matrix
-    /// @param width Width of the matrix
-    /// @param fillament Element to fill the matrix with
-    matrix(size_type height, size_type width, const_reference fillament)
-    :   _height(height),
-        _width(width)
-    {
-        _allocate(size());
-        fill(fillament);
-    }
-
     /// @brief Copy constructor
     /// @param m matrix to copy from
     matrix(const matrix<T>& m) 
