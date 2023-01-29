@@ -2,8 +2,7 @@ const https = require('https')
 const webSocket = require('ws')
 const net = require('net')
 const fs = require("fs")
-
-let dataCache = new Uint8Array(0)
+const jpegEncoder = require('jpeg-js')
 
 const options = {
     key: fs.readFileSync('ssl/privkey.pem'),
@@ -56,15 +55,10 @@ const webServer = https.createServer(options, (req, res) => {
     res.end()
 })
 
+var data = new Uint8Array(0)
 const pointWSS = new webSocket.Server({ noServer: true })
 pointWSS.on('connection', (socket) => {
     console.log('[ POINT ] Client connected')
-
-    const portionSize = 2 * 1024 * 1024
-    for (let i = 0; i < dataCache.length; i += portionSize) {
-        const portion = dataCache.slice(i, i + portionSize)
-        socket.send(portion, { binary: true })
-    }
 
     socket.on('close', () => {
         console.log('[ POINT ] Client disconnected')
@@ -80,23 +74,59 @@ videoWSS.on('connection', (socket) => {
     })
 })
 
-const pointUSS = net.createServer()
-pointUSS.on('connection', (socket) => {
-    console.log('[ POINT ] Source connected')
+const depthSS = net.createServer()
+depthSS.on('connection', (socket) => {
+    console.log('[ DEPTH ] Source connected')
+
+    var stream = new Uint8Array(0)
 
     socket.on('data', (data) => {
-        let newData = new Uint8Array(dataCache.length + data.length)
-        newData.set(dataCache)
-        newData.set(data, dataCache.length)
-        dataCache = newData
+        let newData = new Uint8Array(stream.length + data.length)
+        newData.set(stream)
+        newData.set(data, stream.length)
+        stream = newData
 
+        if (stream.length < 10000) {
+            return
+        }
+
+        let frame = stream.slice(0, 10000)
+        stream = stream.slice(10000)
+
+        // convert grayscale image to pointcloud
+
+        let points = new ArrayBuffer(10000 * 16)
+        let width = 100
+        let height = 100
+
+        for (let i = 0; i < 10000; i++) {
+            let x = 50 - i % width
+            let y = 50 - Math.floor(i / width)
+            let z = frame[i]
+
+            if (z > 250){
+                z = 3.40282347e+38
+            }
+
+            z /= 3
+
+            let point = new ArrayBuffer(16)
+
+            new Float32Array(point).set([x, y, z, 1], 0)
+            new Uint8Array(point).set([255, 255, 255, 255], 12)
+
+            new Uint8Array(points).set(new Uint8Array(point), i * 16)
+        }
+        
+        // send points to client
         pointWSS.clients.forEach((client) => {
-            client.send(data, { binary: true })
+            client.send(points, { binary: true })
         })
+        
     })
 
     socket.on('close', () => {
-        console.log('[ POINT ] Source disconnected')
+        console.log('[ DEPTH ] Source disconnected')
     })
 })
 
@@ -117,24 +147,16 @@ videoUSS.on('connection', (socket) => {
     })
 })
 
+///////////////////////////////////////////////////////////////////////////
+
 const port = 8080
 webServer.listen(port, () => {
     console.log('[ HTTP ] Listening on port ' + port)
 })
 
-try {
-    fs.unlinkSync('/tmp/hertz_points.sock')
-} catch (e) {}
-pointUSS.listen('/tmp/hertz_points.sock', () => {
-    console.log('[ POINT ] Listening on /tmp/hertz_points.sock')
-})
-
-try {
-    fs.unlinkSync('/tmp/hertz_video.sock')
-}
-catch (e) {}
-videoUSS.listen('/tmp/hertz_video.sock', () => {
-    console.log('[ VIDEO ] Listening on /tmp/hertz_video.sock')
+// listen depthSS on port 8081
+depthSS.listen(8081, () => {
+    console.log('[ DEPTH ] Listening on port 8081')
 })
 
 webServer.on('upgrade', (req, socket, head) => {

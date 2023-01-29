@@ -88,6 +88,15 @@ class PointcloudRenderer {
         
         this.pointCount = this.data.length / 16;
     }
+
+    replacePoints(pointArray) {
+        this.data = pointArray;
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.pointBuffer);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.data.buffer, this.gl.DYNAMIC_DRAW);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
+
+        this.pointCount = this.data.length / 16;
+    }
 }
 
 const renderer = new PointcloudRenderer();
@@ -96,7 +105,8 @@ let stereoFrame = document.getElementById("stereoFrame");
 
 stereoFrame.src = "images/na.png";
 
-let iter = 0;
+let cache = new Uint8Array(0);
+
 function connectPWS() {
     const pointWS = new WebSocket("wss://markmakave.com/points");
 
@@ -104,9 +114,21 @@ function connectPWS() {
     pointWS.binaryType = "arraybuffer";
 
     pointWS.onmessage = (event) => {
+        // accumulate data until we have a full frame of 24*10000 bytes
         let data = new Uint8Array(event.data);
+        let newData = new Uint8Array(cache.length + data.length);
+        newData.set(cache);
+        newData.set(data, cache.length);
+        cache = newData;
 
-        renderer.addPoints(data);
+        if (cache.length < 16*10000) {
+            return;
+        }
+
+        let points = cache.slice(0, 16*10000);
+        cache = cache.slice(16*10000);
+
+        renderer.replacePoints(points);
     }
 
     pointWS.onopen = () => {
@@ -185,27 +207,13 @@ while (true) {
     let projection = mat4.create();
     let mvp = mat4.create();
 
-    // camera looks at origin from 5 units away in z
-    mat4.lookAt(view, [0, 0, 0], [0, 0, -1], [0, 1, 0])
-    mat4.translate(view, view, [0, 0, -5])
+    mat4.lookAt(view, [0, 0, -50], [0, 0, 0], [0, 1, 0]);
+    mat4.perspective(projection, 90 * Math.PI / 180, renderer.canvas.width / renderer.canvas.height, 0.1, 100000);
 
-    // perspective projection
-    mat4.perspective(projection, 45 * Math.PI / 180, renderer.canvas.width / renderer.canvas.height, 0.1, 100000);
-
-    let t = Date.now() / 1000;
-
-    // model scales on each axis for breathing effect
-    let scale = 1 + Math.sin(t) / 4 - 0.25;
-    mat4.scale(model, model, [scale, scale, scale])
-
-    // model rotates on each axis using sin with a different speed and offset
-    mat4.rotate(model, model, Math.sin(t / 5 + 0) * Math.PI * 2, [1, 0, 0]);
-    mat4.rotate(model, model, Math.sin(t / 6 + 5) * Math.PI * 2, [0, 1, 0]);
-    mat4.rotate(model, model, Math.sin(t / 7 + 10) * Math.PI * 2, [0, 0, 1]);
-
-    // multiply all matricies together
     mat4.multiply(mvp, projection, view);
     mat4.multiply(mvp, mvp, model);
+
+
     
     renderer.mvp = mvp;
 

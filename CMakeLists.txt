@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
-set(CMAKE_C_COMPILER /usr/bin/gcc-12)
-set(CMAKE_CXX_COMPILER /usr/bin/g++-12)
+set(CMAKE_C_COMPILER /usr/bin/gcc-11)
+set(CMAKE_CXX_COMPILER /usr/bin/g++-11)
 
 project(lumina LANGUAGES C CXX)
 
