@@ -33,21 +33,6 @@ body {
     font-family: monospace;
 }
 
-#stereoFrame {
-    position: absolute;
-    top: 0;
-    right: 0;
-    z-index: 1;
-
-    padding: 0;
-    margin: 0;
-
-    height: 250px;
-
-    backdrop-filter: blur(5px);
-    user-select: none;
-}
-
 /* non-selectable text */
 .error {
     color: red;
