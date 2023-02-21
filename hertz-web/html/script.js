@@ -323,7 +323,7 @@ class PointcloudRenderer {
 
                 this.gl.uniformMatrix4fv(uMVP, false, mvp);
 
-                this.gl.drawArrays(this.gl.POINTS, 0, this.cloud.length / 16);
+                this.gl.drawElements(this.gl.POINTS, this.indices.length, this.gl.UNSIGNED_SHORT, 0);
             }
             
             requestAnimationFrame(render);
@@ -332,22 +332,15 @@ class PointcloudRenderer {
         render();
     }
 
-    addPoints(pointArray) {
-        let newData = new Uint8Array(this.cloud.length + pointArray.length);
-        newData.set(this.cloud);
-        newData.set(pointArray, this.cloud.length);
-        this.cloud = newData;
-
+    setPoints(pointArray) {
+        this.cloud = pointArray;
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.pointBuffer);
         this.gl.bufferData(this.gl.ARRAY_BUFFER, this.cloud.buffer, this.gl.DYNAMIC_DRAW);
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
     }
 
-    replacePoints(pointArray) {
-        this.cloud = pointArray;
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.pointBuffer);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.cloud.buffer, this.gl.DYNAMIC_DRAW);
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
+    setIndices(indexArray) {
+        this.indices = indexArray;
     }
 }
 
@@ -377,38 +370,10 @@ function connectWS() {
         let frame = cache.slice(0, 10000);
         cache = cache.slice(10000);
 
-        let width = 100
-        let height = 100
+        const [vertex_array, index_array] = convert(frame);
 
-        let cloud = new ArrayBuffer(width * height * 16);
-        for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width; x++) {
-                let index = (y * width + x);
-                let z = frame[index];
-
-                if (z == 255) {
-                    continue;
-                }
-
-                let r, g, b;
-
-                let factor = z / 255.0;
-                if (factor < 0.5) {
-                    r = 255 * (1 - factor * 2);
-                    g = 255 * (factor * 2);
-                    b = 0;
-                } else {
-                    r = 0;
-                    g = 255 * (1 - (factor - 0.5) * 2);
-                    b = 255 * ((factor - 0.5) * 2);
-                }
-
-                new Float32Array(cloud).set([width / 2 - x, height / 2 - y, z / 3], index * 4);
-                new Uint8Array(cloud).set([r, g, b, 255], index * 16 + 12);
-            }
-        }
-
-        renderer.replacePoints(new Uint8Array(cloud));
+        renderer.setPoints(vertex_array);
+        renderer.setIndices(index_array);
     }
 
     ws.onopen = () => {
@@ -434,3 +399,136 @@ function connectWS() {
 }
 
 connectWS();
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+const width = 100
+const height = 100
+
+const value_offset = 35
+
+function convert(buffer) {
+
+    let vertex_array = new ArrayBuffer(width * height * 16)
+    let index_array = new Uint16Array()
+
+    for (var y = 0; y < height; ++y) {
+        for (var x = 0; x < width; ++x) {
+
+            let value = buffer[y * width + x]
+
+            // process vertex
+
+            let cord = {
+                x: x - width / 2.0,
+                y: y - height / 2.0,
+                z: value
+            }
+
+            let color = {
+                r: 0,
+                g: 0,
+                b: 0,
+                a: 255
+            }
+
+            // set color to gradiet based on factor:
+            // 1.0 - blue
+            // 0.5 - green
+            // 0.0 - red
+            let factor = value / (255.0 - value_offset)
+
+            if (factor > 0.5) {
+                color.b = 255 * (factor * 2 - 1)
+                color.g = 255 * (2 - 2 * factor)
+            } else {
+                color.g = 255 * (factor * 2)
+                color.r = 255 * (1 - factor * 2)
+            }
+
+            // append cords and color to vectex_array
+            new Float32Array(vertex_array).set([cord.x, cord.y, cord.z], (y * width + x) * 4)
+            new Uint8Array(vertex_array).set([color.r, color.g, color.b, color.a], (y * width + x) * 16 + 12)
+
+            // process index array
+            // create a triangle for every 4 close vertex
+            if (x > 0 && y > 0) {
+                let base = new Float32Array(vertex_array)
+        
+                let neigbour = [
+                    base[((y-1) * width + (x-1)) * 4 + 2],
+                    base[((y-1) * width + (x-0)) * 4 + 2],
+                    base[((y-0) * width + (x-1)) * 4 + 2],
+                    base[((y-0) * width + (x-0)) * 4 + 2]
+                ]
+
+                if (neigbour[0] != 255) {
+                    if (neigbour[3] != 255) {
+                        if (neigbour[1] != 255) {
+                            // append 
+                            // [
+                            //     (y-1) * width + (x-1), 
+                            //     (y-1) * width + (x-0),
+                            //     (y-0) * width + (x-0)
+                            // ]
+                            index_array.push((y-1) * width + (x-1))
+                            index_array.push((y-1) * width + (x-0))
+                            index_array.push((y-0) * width + (x-0))
+                        }
+
+                        if (neigbour[2] != 255) {
+                            // append 
+                            // [
+                            //     (y-1) * width + (x-1), 
+                            //     (y-0) * width + (x-1),
+                            //     (y-0) * width + (x-0)
+                            // ]
+                            index_array.push((y-1) * width + (x-1))
+                            index_array.push((y-0) * width + (x-1))
+                            index_array.push((y-0) * width + (x-0))
+                        }
+                    } else {
+                        if (neigbour[1] != 255 && neigbour[2] != 255) {
+                            // append 
+                            // [
+                            //     (y-1) * width + (x-1), 
+                            //     (y-1) * width + (x-0),
+                            //     (y-0) * width + (x-1)
+                            // ]
+                            index_array.push((y-1) * width + (x-1))
+                            index_array.push((y-1) * width + (x-0))
+                            index_array.push((y-0) * width + (x-1))
+                        } else {
+                            // no way to build a triangle
+                            continue;
+                        }
+                    }
+                } else {
+                    if (neigbour[3] != 255) {
+                        if (neigbour[1] != 255 && neigbour[2] != 255) {
+                            // append 
+                            // [
+                            //     (y-1) * width + (x-0), 
+                            //     (y-0) * width + (x-0),
+                            //     (y-0) * width + (x-1)
+                            // ]
+                            index_array.push((y-1) * width + (x-0))
+                            index_array.push((y-0) * width + (x-0))
+                            index_array.push((y-0) * width + (x-1))
+                        } else {
+                            // no way to build a triangle
+                            continue;
+                        }
+                    } else {
+                        // no way to build a triangle
+                        continue;
+                    }
+                }
+            }
+        }
+    }
+
+    return [vertex_array, index_array]
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
