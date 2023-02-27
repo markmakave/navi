@@ -195,7 +195,8 @@ class PointcloudRenderer {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
         // payload
 
-        this.cloud = new Uint8Array(0);
+        this.cloud = new Uint8Array(0)
+        this.indices = new Uint16Array(0)
 
         this.cloudModel = mat4.create();
         mat4.identity(this.cloudModel);
@@ -240,15 +241,20 @@ class PointcloudRenderer {
         gizmoData[22] = 1;
         new Uint8Array(this.gizmo).set([0, 0, 255, 255], 92);
 
-        this.gizmoModel = mat4.create();
-        mat4.identity(this.gizmoModel);
-        mat4.scale(this.gizmoModel, this.gizmoModel, [10, 10, 10]);
+        this.gizmoModel = mat4.create()
+        mat4.identity(this.gizmoModel)
+        mat4.scale(this.gizmoModel, this.gizmoModel, [10, 10, 10])
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // buffers
-        this.gizmoBuffer = this.gl.createBuffer();
+        this.gizmoBuffer = this.gl.createBuffer()
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gizmoBuffer)
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.gizmo, this.gl.STATIC_DRAW)
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null)
+
         this.pointBuffer = this.gl.createBuffer();
+        this.indexBuffer = this.gl.createBuffer()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -271,11 +277,9 @@ class PointcloudRenderer {
             // move cloudModel back and forth along the Z axis using sin wave
             mat4.identity(this.cloudModel);
 
-
             {
                 // draw gizmo
                 this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gizmoBuffer);
-                this.gl.bufferData(this.gl.ARRAY_BUFFER, this.gizmo, this.gl.STATIC_DRAW);
 
                 let aPosition = this.gl.getAttribLocation(this.program, "aPosition");
                 this.gl.enableVertexAttribArray(aPosition);
@@ -302,7 +306,7 @@ class PointcloudRenderer {
             {
                 // draw cloud
                 this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.pointBuffer);
-                this.gl.bufferData(this.gl.ARRAY_BUFFER, this.cloud, this.gl.STATIC_DRAW);
+                this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
 
                 let aPosition = this.gl.getAttribLocation(this.program, "aPosition");
                 this.gl.enableVertexAttribArray(aPosition);
@@ -323,7 +327,7 @@ class PointcloudRenderer {
 
                 this.gl.uniformMatrix4fv(uMVP, false, mvp);
 
-                this.gl.drawElements(this.gl.POINTS, this.indices.length, this.gl.UNSIGNED_SHORT, 0);
+                this.gl.drawElements(this.gl.TRIANGLES, this.indices.length, this.gl.UNSIGNED_SHORT, 0);
             }
             
             requestAnimationFrame(render);
@@ -334,13 +338,16 @@ class PointcloudRenderer {
 
     setPoints(pointArray) {
         this.cloud = pointArray;
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.pointBuffer);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.cloud.buffer, this.gl.DYNAMIC_DRAW);
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.pointBuffer)
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.cloud, this.gl.STATIC_DRAW);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null)
     }
 
     setIndices(indexArray) {
         this.indices = indexArray;
+        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
+        this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, this.indices.buffer, this.gl.STATIC_DRAW)
+        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, null)
     }
 }
 
@@ -370,7 +377,10 @@ function connectWS() {
         let frame = cache.slice(0, 10000);
         cache = cache.slice(10000);
 
-        const [vertex_array, index_array] = convert(frame);
+        let pair = convert(frame);
+
+        let vertex_array = pair[0]
+        let index_array = pair[1]
 
         renderer.setPoints(vertex_array);
         renderer.setIndices(index_array);
@@ -410,7 +420,8 @@ const value_offset = 35
 function convert(buffer) {
 
     let vertex_array = new ArrayBuffer(width * height * 16)
-    let index_array = new Uint16Array()
+    let index_array = new Uint16Array(99 * 99 * 2 * 3)
+    let index_count = 0
 
     for (var y = 0; y < height; ++y) {
         for (var x = 0; x < width; ++x) {
@@ -422,7 +433,7 @@ function convert(buffer) {
             let cord = {
                 x: x - width / 2.0,
                 y: y - height / 2.0,
-                z: value
+                z: value / 10
             }
 
             let color = {
@@ -471,9 +482,12 @@ function convert(buffer) {
                             //     (y-1) * width + (x-0),
                             //     (y-0) * width + (x-0)
                             // ]
-                            index_array.push((y-1) * width + (x-1))
-                            index_array.push((y-1) * width + (x-0))
-                            index_array.push((y-0) * width + (x-0))
+                            index_array.set([
+                                (y-1) * width + (x-1),
+                                (y-1) * width + (x-0),
+                                (y-0) * width + (x-0),
+                            ], index_count)
+                            index_count += 3
                         }
 
                         if (neigbour[2] != 255) {
@@ -483,9 +497,12 @@ function convert(buffer) {
                             //     (y-0) * width + (x-1),
                             //     (y-0) * width + (x-0)
                             // ]
-                            index_array.push((y-1) * width + (x-1))
-                            index_array.push((y-0) * width + (x-1))
-                            index_array.push((y-0) * width + (x-0))
+                            index_array.set([
+                                (y-1) * width + (x-1),
+                                (y-0) * width + (x-1),
+                                (y-0) * width + (x-0),
+                            ], index_count)
+                            index_count += 3
                         }
                     } else {
                         if (neigbour[1] != 255 && neigbour[2] != 255) {
@@ -495,9 +512,12 @@ function convert(buffer) {
                             //     (y-1) * width + (x-0),
                             //     (y-0) * width + (x-1)
                             // ]
-                            index_array.push((y-1) * width + (x-1))
-                            index_array.push((y-1) * width + (x-0))
-                            index_array.push((y-0) * width + (x-1))
+                            index_array.set([
+                                (y-1) * width + (x-1),
+                                (y-1) * width + (x-0),
+                                (y-0) * width + (x-1),
+                            ], index_count)
+                            index_count += 3
                         } else {
                             // no way to build a triangle
                             continue;
@@ -512,9 +532,12 @@ function convert(buffer) {
                             //     (y-0) * width + (x-0),
                             //     (y-0) * width + (x-1)
                             // ]
-                            index_array.push((y-1) * width + (x-0))
-                            index_array.push((y-0) * width + (x-0))
-                            index_array.push((y-0) * width + (x-1))
+                            index_array.set([
+                                (y-1) * width + (x-0),
+                                (y-0) * width + (x-0),
+                                (y-0) * width + (x-1),
+                            ], index_count)
+                            index_count += 3
                         } else {
                             // no way to build a triangle
                             continue;
@@ -527,6 +550,8 @@ function convert(buffer) {
             }
         }
     }
+
+    index_array = index_array.slice(0, index_count)
 
     return [vertex_array, index_array]
 }
