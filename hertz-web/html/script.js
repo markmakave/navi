@@ -461,6 +461,8 @@ function convert(buffer) {
             new Float32Array(vertex_array).set([cord.x, cord.y, cord.z], (y * width + x) * 4)
             new Uint8Array(vertex_array).set([color.r, color.g, color.b, color.a], (y * width + x) * 16 + 12)
 
+            if (value == 255) continue;
+
             // process index array
             // create a triangle for every 4 close vertex
             if (x > 0 && y > 0) {
