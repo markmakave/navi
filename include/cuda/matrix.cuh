@@ -463,7 +463,7 @@ private:
 
         #else
 
-        lm::log::debug("Deallocating", _data, "from GPU");
+        lm::log::debug("Deallocating", (void*)_data, "from GPU");
 
         cudaError_t status = cudaFree(_data);
         if (status != cudaSuccess)

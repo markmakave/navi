@@ -281,7 +281,7 @@ private:
     void
     _deallocate()
     {
-        lm::log::debug("Deallocating", _data, "from HEAP");
+        lm::log::debug("Deallocating", (void*)_data, "from HEAP");
 
         operator delete[](_data);
     }
