@@ -52,32 +52,43 @@ public:
     :   matrix<T>(m)
     {}
 
-    image(const matrix<T>& m) 
-    :   matrix<T>(m)
-    {}
-
     image(image&& m)
     :   matrix<T>(std::move(m))
+    {}
+
+    image(const matrix<T>& m) 
+    :   matrix<T>(m)
     {}
 
     image(matrix<T>&& m)
     :   matrix<T>(std::move(m))
     {}
 
-    template <typename U>
-    image(const image<U>& m)
-    :   matrix<T>(m)
-    {}
-
-    template <typename U>
-    image(const matrix<U>& m)
-    :   matrix<T>(m)
-    {}
-
     image&
     operator=(const image& m)
     {
         matrix<T>::operator=(m);
+        return *this;
+    }
+
+    image&
+    operator = (image&& m)
+    {
+        matrix<T>::operator=(std::move(m));
+        return *this;
+    }
+
+    image&
+    operator = (const matrix<T>& m)
+    {
+        matrix<T>::operator=(m);
+        return *this;
+    }
+
+    image&
+    operator = (matrix<T>&& m)
+    {
+        matrix<T>::operator=(std::move(m));
         return *this;
     }
 
@@ -88,7 +99,7 @@ public:
     }
 
     void
-    circle(unsigned x, unsigned y, unsigned radius, const_reference color)
+    circle(size_type x, size_type y, size_type radius, const_reference color)
     {
         int f = 1 - radius;
         int ddF_x = 1;
@@ -166,43 +177,6 @@ public:
                 error += dx;
             }
         }
-    }
-
-    image&
-    operator = (const matrix<T>& m)
-    {
-        matrix<T>::operator=(m);
-        return *this;
-    }
-
-    image&
-    operator = (image&& m)
-    {
-        matrix<T>::operator=(std::move(m));
-        return *this;
-    }
-
-    image&
-    operator = (matrix<T>&& m)
-    {
-        matrix<T>::operator=(std::move(m));
-        return *this;
-    }
-
-    template <typename U>
-    image&
-    operator = (const image<U>& m)
-    {
-        matrix<T>::operator=(m);
-        return *this;
-    }
-
-    template <typename U>
-    image&
-    operator = (const matrix<U>& m)
-    {
-        matrix<T>::operator=(m);
-        return *this;
     }
 
     void
