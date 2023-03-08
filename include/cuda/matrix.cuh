@@ -463,12 +463,15 @@ private:
 
         #else
 
-        lm::log::debug("Deallocating", (void*)_data, "from GPU");
+        if (_data != nullptr)
+        {
+            lm::log::debug("Deallocating", (void*)_data, "from GPU");
 
-        cudaError_t status = cudaFree(_data);
-        if (status != cudaSuccess)
-            lm::log::error("cudaFree error occured:", cudaGetErrorString(status));
-
+            cudaError_t status = cudaFree(_data);
+            if (status != cudaSuccess)
+                lm::log::error("cudaFree error occured:", cudaGetErrorString(status));
+        }
+        
         #endif
     }
 

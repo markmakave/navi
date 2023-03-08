@@ -281,9 +281,11 @@ private:
     void
     _deallocate()
     {
-        lm::log::debug("Deallocating", (void*)_data, "from HEAP");
-
-        operator delete[](_data);
+        if (_data != nullptr)
+        {
+            lm::log::debug("Deallocating", (void*)_data, "from HEAP");
+            operator delete[](_data);
+        }
     }
 
 protected:
