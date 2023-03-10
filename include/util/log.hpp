@@ -5,7 +5,7 @@
 
 namespace lm {
 
-#define LOG_PROPERTY static inline const char* const
+#define LOG_PROPERTY inline static const char* const
 
 class log
 {

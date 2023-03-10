@@ -1,6 +1,9 @@
 #pragma once
 
-#include "util/log.hpp"
+// #include "util/log.hpp"
+
+#define DEBUG_LOG(message, ...) { /*lm::log::debug(message, ##__VA_ARGS__);*/ }
+#define ERROR_LOG(message, ...) { /*lm::log::error(message, ##__VA_ARGS__);*/ }
 
 namespace lm {
 
@@ -202,8 +205,13 @@ public:
     reference
     at(size_type y, size_type x)
     {
+        static value_type value;
         if (y >= _height || x >= _width)
-            throw std::out_of_range("matrix::at");
+        {
+            value = value_type();
+            return value;
+        }
+
         return _data[y * _width + x];
     }
 
@@ -214,8 +222,13 @@ public:
     const_reference
     at(size_type y, size_type x) const
     {
+        static value_type value;
         if (y >= _height || x >= _width)
-            throw std::out_of_range("matrix::at");
+        {
+            value = value_type();
+            return value;
+        }
+
         return _data[y * _width + x];
     }
 
@@ -264,7 +277,7 @@ private:
     void
     _allocate()
     {
-        lm::log::debug("Allocating", size() * sizeof(T), "bytes on HEAP");
+        DEBUG_LOG("Allocating", size() * sizeof(T), "bytes on HEAP");
 
         if (size() == 0)
         {
@@ -274,7 +287,7 @@ private:
         {
             _data = reinterpret_cast<pointer>(operator new[](size() * sizeof(T)));
             if (_data == nullptr)
-                lm::log::error("Memory allocation failed");
+                ERROR_LOG("Memory allocation failed");
         }
     }
 
@@ -283,7 +296,7 @@ private:
     {
         if (_data != nullptr)
         {
-            lm::log::debug("Deallocating", (void*)_data, "from HEAP");
+            DEBUG_LOG("Deallocating", (void*)_data, "from HEAP");
             operator delete[](_data);
         }
     }

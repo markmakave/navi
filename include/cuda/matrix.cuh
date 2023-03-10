@@ -3,7 +3,10 @@
 #include <cuda_runtime.h>
 
 #include "base/matrix.hpp"
-#include "util/log.hpp"
+// #include "util/log.hpp"
+
+#define DEBUG_LOG(message, ...) { /*lm::log::debug(message, ##__VA_ARGS__);*/ }
+#define ERROR_LOG(message, ...) { /*lm::log::error(message, ##__VA_ARGS__);*/ }
 
 namespace lm {
 namespace cuda {
@@ -66,7 +69,7 @@ public:
 
         cudaError_t status = cudaMemcpy(_data, m._data, size * sizeof(value_type), cudaMemcpyDeviceToDevice);
         if (status != cudaSuccess)
-            lm::log::error("cudaMemcpy error occured:", cudaGetErrorString(status));
+            ERROR_LOG("cudaMemcpy error occured:", cudaGetErrorString(status));
 
         #endif
     }
@@ -112,7 +115,7 @@ public:
 
             cudaError_t status = cudaMemcpy(_data, m._data, size * sizeof(value_type), cudaMemcpyDeviceToDevice);
             if (status != cudaSuccess)
-                lm::log::error("cudaMemcpy error occured:", cudaGetErrorString(status));
+                ERROR_LOG("cudaMemcpy error occured:", cudaGetErrorString(status));
 
             #endif
         }
@@ -239,7 +242,7 @@ public:
         {
             cudaError_t status = cudaMemcpy(_parent[_y] + _x, &value, sizeof(value), cudaMemcpyHostToDevice);
             if (status != cudaSuccess)
-                lm::log::error("cudaMemcpy error occured:", cudaGetErrorString(status));
+                ERROR_LOG("cudaMemcpy error occured:", cudaGetErrorString(status));
 
             return *this;
         }
@@ -250,7 +253,7 @@ public:
             value_type value;
             cudaError_t status = cudaMemcpy(&value, _parent[_y] + _x, sizeof(value), cudaMemcpyDeviceToHost);
             if (status != cudaSuccess)
-                lm::log::error("cudaMemcpy error occured:", cudaGetErrorString(status));
+                ERROR_LOG("cudaMemcpy error occured:", cudaGetErrorString(status));
 
             return value;
         }
@@ -303,7 +306,7 @@ public:
         
         cudaError_t status = cudaMemcpy(&value, row(y) + x, sizeof(value), cudaMemcpyDeviceToHost);
         if (status != cudaSuccess)
-            lm::log::error("cudaMemcpy error occured:", cudaGetErrorString(status));
+            ERROR_LOG("cudaMemcpy error occured:", cudaGetErrorString(status));
 
         return value;
 
@@ -351,11 +354,14 @@ public:
         #else
 
         if (y >= _height || x >= _width)
-            throw std::out_of_range("matrix::at");
+        {
+            value = value_type();
+            return value;
+        }
 
         cudaError_t status = cudaMemcpy(&value, row(y) + x, sizeof(value), cudaMemcpyDeviceToHost);
         if (status != cudaSuccess)
-            lm::log::error("cudaMemcpy error occured:", cudaGetErrorString(status));
+            ERROR_LOG("cudaMemcpy error occured:", cudaGetErrorString(status));
 
         return value;
 
@@ -415,7 +421,7 @@ public:
 
         cudaError_t status = cudaMemcpy(_data, m.data(), size(), cudaMemcpyHostToDevice);
         if (status != cudaSuccess)
-            lm::log::error("cudaMemcpy error occured:", cudaGetErrorString(status));
+            ERROR_LOG("cudaMemcpy error occured:", cudaGetErrorString(status));
     }
 
     __host__
@@ -426,7 +432,7 @@ public:
 
         cudaError_t status = cudaMemcpy(m.data(), _data, size() * sizeof(value_type), cudaMemcpyDeviceToHost);
         if (status != cudaSuccess)
-            lm::log::error("cudaMemcpy error occured:", cudaGetErrorString(status));
+            ERROR_LOG("cudaMemcpy error occured:", cudaGetErrorString(status));
     }
 
 private:
@@ -444,11 +450,11 @@ private:
 
         #else
 
-        lm::log::debug("Allocating", size() * sizeof(value_type), "bytes on GPU");
+        DEBUG_LOG("Allocating", size() * sizeof(value_type), "bytes on GPU");
 
         cudaError_t status = cudaMalloc((void**)&_data, size() * sizeof(value_type));
         if (status != cudaSuccess)
-            lm::log::error("cudaMalloc error occured:", cudaGetErrorString(status));
+            ERROR_LOG("cudaMalloc error occured:", cudaGetErrorString(status));
 
         #endif
     }
@@ -465,11 +471,11 @@ private:
 
         if (_data != nullptr)
         {
-            lm::log::debug("Deallocating", (void*)_data, "from GPU");
+            DEBUG_LOG("Deallocating", (void*)_data, "from GPU");
 
             cudaError_t status = cudaFree(_data);
             if (status != cudaSuccess)
-                lm::log::error("cudaFree error occured:", cudaGetErrorString(status));
+                ERROR_LOG("cudaFree error occured:", cudaGetErrorString(status));
         }
         
         #endif

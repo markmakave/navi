@@ -333,6 +333,7 @@ image<rgba>::encode<image<rgba>::format::jpeg>(int quality) const
 
 template <>
 template <>
+inline
 void
 image<gray>::decode<image<gray>::format::png>(const array<byte>& buffer) {
 
@@ -341,6 +342,7 @@ image<gray>::decode<image<gray>::format::png>(const array<byte>& buffer) {
 
 template <>
 template <>
+inline
 void
 image<rgb>::decode<image<rgb>::format::png>(const array<byte>& buffer) {
     
@@ -365,6 +367,7 @@ image<rgb>::decode<image<rgb>::format::png>(const array<byte>& buffer) {
 
 template <>
 template <>
+inline
 void
 image<rgba>::decode<image<rgba>::format::png>(const array<byte>& buffer) {
 
@@ -373,6 +376,7 @@ image<rgba>::decode<image<rgba>::format::png>(const array<byte>& buffer) {
 
 template <>
 template <>
+inline
 void
 image<gray>::decode<image<gray>::format::jpeg>(const array<byte>& buffer) {
 
@@ -381,6 +385,7 @@ image<gray>::decode<image<gray>::format::jpeg>(const array<byte>& buffer) {
 
 template <>
 template <>
+inline
 void
 image<rgb>::decode<image<rgb>::format::jpeg>(const array<byte>& buffer) {
 
@@ -389,6 +394,7 @@ image<rgb>::decode<image<rgb>::format::jpeg>(const array<byte>& buffer) {
 
 template <>
 template <>
+inline
 void
 image<rgba>::decode<image<rgba>::format::jpeg>(const array<byte>& buffer) {
 

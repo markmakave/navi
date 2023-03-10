@@ -1,39 +1,33 @@
-#include <cuda.h>
-
-#include "cuda/matrix.cuh"
+#include "base/matrix.hpp"
 #include "base/color.hpp"
-#include "slam/fast11.hpp"
 
 namespace lm {
-namespace cuda {
 
 static
-__device__
 bool
 fast11(const lm::gray *p, int origin, int t);
 
-__global__
 void
-detect(const lm::cuda::matrix<lm::gray> input, lm::cuda::matrix<bool> output)
+detect(const matrix<lm::gray>& input, matrix<bool>& output)
 {
-    unsigned x = blockIdx.x * blockDim.x + threadIdx.x;
-    unsigned y = blockIdx.y * blockDim.y + threadIdx.y;
+    #pragma omp parallel for
+    for (unsigned y = 3; y < input.height() - 3; ++y)
+    {
+        for (unsigned x = 3; x < input.width() - 3; ++x)
+        {
+            lm::gray circle[16] = {
+                input[y - 3][x], input[y - 3][x + 1], input[y - 2][x + 2], input[y - 1][x + 3],
+                input[y][x + 3], input[y + 1][x + 3], input[y + 2][x + 2], input[y + 3][x + 1],
+                input[y + 3][x], input[y + 3][x - 1], input[y + 2][x - 2], input[y + 1][x - 3],
+                input[y][x - 3], input[y - 1][x - 3], input[y - 2][x - 2], input[y - 3][x - 1]
+            };
 
-    if (x >= input.width() - 3 || y >= input.height() - 3 || x < 3 || y < 3)
-        return;
-
-    lm::gray circle[16] = {
-        input[y - 3][x], input[y - 3][x + 1], input[y - 2][x + 2], input[y - 1][x + 3],
-        input[y][x + 3], input[y + 1][x + 3], input[y + 2][x + 2], input[y + 3][x + 1],
-        input[y + 3][x], input[y + 3][x - 1], input[y + 2][x - 2], input[y + 1][x - 3],
-        input[y][x - 3], input[y - 1][x - 3], input[y - 2][x - 2], input[y - 3][x - 1]
-    };
-
-    output[y][x] = fast11(circle, input[y][x], 1);
+            output[y][x] = fast11(circle, input[y][x], 1);
+        }
+    }
 }
 
 static
-__device__
 bool
 fast11(const lm::gray *p, int origin, int t)
 {
@@ -1864,5 +1858,4 @@ fast11(const lm::gray *p, int origin, int t)
     return false;
 }
 
-}
 }
