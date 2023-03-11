@@ -43,6 +43,14 @@ public:
         _allocate();
     }
 
+    matrix(size_type height, size_type width, const_reference value)
+    :   _height(height),
+        _width(width)
+    {
+        _allocate();
+        fill(value);
+    }
+
     /// @brief Copy constructor
     /// @param m matrix to copy from
     matrix(const matrix<T>& m) 
