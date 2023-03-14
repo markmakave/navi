@@ -1,6 +1,5 @@
-#pragma once
-
 #include <cuda_runtime.h>
+
 #include "cuda/matrix.cuh"
 #include "base/color.hpp"
 
@@ -9,11 +8,10 @@ namespace cuda {
 
 __global__
 void
-detect(matrix<lm::gray> input, matrix<bool> output);
+descript(const matrix<lm::gray> image, const matrix<bool> features)
+{
 
-__global__
-void
-test(int, int, int);
+}
 
 }
 }

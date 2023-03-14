@@ -9,27 +9,20 @@ namespace lm {
 
 #define LM_PROFILE(name) if (auto _ = lm::profiler::record(name))
 
-class profiler {
+class profiler
+{
 
-    static std::ofstream file;
-    static std::chrono::high_resolution_clock::time_point start;
+    static inline std::ofstream file;
+    static inline std::chrono::high_resolution_clock::time_point start;
 
-    class timer {
-
+    class timer
+    {
         friend class profiler;
-
-        std::chrono::high_resolution_clock::time_point begin, end;
-        const std::string scope_name;
-
-        timer(const std::string& scope_name) : scope_name(scope_name) {
-            begin = std::chrono::high_resolution_clock::now();
-            std::this_thread::sleep_for(std::chrono::nanoseconds(1));
-        }
 
     public:
 
-        constexpr
-        operator bool() const {
+        operator bool() const
+        {
             return true;
         }
 
@@ -38,6 +31,17 @@ class profiler {
             profiler::note(*this);
         }
 
+    private:
+
+        timer(const std::string& scope_name) : scope_name(scope_name) {
+            begin = std::chrono::high_resolution_clock::now();
+            std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+        }
+
+    private:
+
+        std::chrono::high_resolution_clock::time_point begin, end;
+        const std::string scope_name;
     };
 
     static

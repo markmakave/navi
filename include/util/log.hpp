@@ -5,19 +5,11 @@
 
 namespace lm {
 
-#define LOG_PROPERTY inline static const char* const
-
 class log
 {
 public:
 
-    LOG_PROPERTY red     = "\033[31m";
-    LOG_PROPERTY green   = "\033[32m";
-    LOG_PROPERTY yellow  = "\033[33m";
-    LOG_PROPERTY blue    = "\033[34m";
-    LOG_PROPERTY magenta = "\033[35m";
-    LOG_PROPERTY cyan    = "\033[36m";
-    LOG_PROPERTY clear   = "\033[0m";
+    #define clear_string   "\033[0m"
 
     struct config {
         std::ostream& stream;
@@ -27,37 +19,10 @@ public:
         const char* terminator;
     };
 
-    static inline const config info_config = {
-        std::cout,
-        "[ INFO ]",
-        cyan,
-        " ",
-        "\n"
-    };
-
-    static inline const config debug_config = {
-        std::cout,
-        "[ DEBUG ]",
-        magenta,
-        " ",
-        "\n"
-    };
-
-    static inline const config warning_config = {
-        std::cout,
-        "[ WARNING ]",
-        yellow,
-        " ",
-        "\n"
-    };
-
-    static inline const config error_config = {
-        std::cerr,
-        "[ ERROR ]",
-        red,
-        " ",
-        "\n"
-    };
+    #define info_config    { std::cout, "[ INFO ]",    "\033[36m", " ", "\n" }
+    #define debug_config   { std::cout, "[ DEBUG ]",   "\033[35m", " ", "\n" }
+    #define warning_config { std::cout, "[ WARNING ]", "\033[31m", " ", "\n" }
+    #define error_config   { std::cerr, "[ ERROR ]",   "\033[33m", " ", "\n" }
 
     template <typename ...Args>
     static void
@@ -65,7 +30,7 @@ public:
     {
         cfg.stream << cfg.color;
         console(cfg, cfg.label, date(), args...);
-        cfg.stream << clear;
+        cfg.stream << clear_string;
     }
 
     template <typename ...Args>
@@ -131,7 +96,6 @@ private:
         return buf;
     }
 
-    #undef LOG_PROPERTY
 };
 
 }

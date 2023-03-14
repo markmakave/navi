@@ -38,8 +38,8 @@ public:
     :   matrix<T>(height, width)
     {}
 
-    image(size_type width, size_type height, const_reference fillament)
-    :   matrix<T>(height, width, fillament)
+    image(size_type width, size_type height, const_reference value)
+    :   matrix<T>(height, width, value)
     {}
 
     image(const char* filename)
@@ -48,35 +48,18 @@ public:
         read(filename);
     }
 
-    image(const image& m) 
+    image(const matrix<T>& m) 
     :   matrix<T>(m)
     {}
 
-    image(image&& m)
-    :   matrix<T>(std::move(m))
-    {}
-
-    image(const matrix<T>& m) 
+    template <typename U>
+    image(const matrix<U>& m) 
     :   matrix<T>(m)
     {}
 
     image(matrix<T>&& m)
     :   matrix<T>(std::move(m))
     {}
-
-    image&
-    operator=(const image& m)
-    {
-        matrix<T>::operator=(m);
-        return *this;
-    }
-
-    image&
-    operator = (image&& m)
-    {
-        matrix<T>::operator=(std::move(m));
-        return *this;
-    }
 
     image&
     operator = (const matrix<T>& m)
@@ -220,6 +203,10 @@ public:
         {
             buffer = encode<format::jpeg>(quality);
         }
+        else if (ext == "qoi")
+        {
+            buffer = encode<format::qoi>();
+        }
 
         std::ofstream file(filename, std::ios::binary);
         file.write((char*)buffer.data(), buffer.size());
@@ -228,14 +215,15 @@ public:
     enum class format
     {
         png,
-        jpeg
+        jpeg,
+        qoi
     };
 
-    template <enum format fmt>
+    template <format fmt>
     array<byte>
     encode() const;
 
-    template <enum format fmt>
+    template <format fmt>
     array<byte>
     encode(int quality) const;
 
@@ -334,8 +322,42 @@ image<rgba>::encode<image<rgba>::format::jpeg>(int quality) const
 template <>
 template <>
 inline
+array<byte>
+image<gray>::encode<image<gray>::format::qoi>() const
+{
+    
+
+    return lm::array<lm::byte>();
+}
+
+template <>
+template <>
+inline
+array<byte>
+image<rgb>::encode<image<rgb>::format::qoi>() const
+{
+    
+
+    return lm::array<lm::byte>();
+}
+
+template <>
+template <>
+inline
+array<byte>
+image<rgba>::encode<image<rgba>::format::qoi>() const
+{
+    
+
+    return lm::array<lm::byte>();
+}
+
+template <>
+template <>
+inline
 void
-image<gray>::decode<image<gray>::format::png>(const array<byte>& buffer) {
+image<gray>::decode<image<gray>::format::png>(const array<byte>& buffer)
+{
 
 
 }
@@ -344,7 +366,8 @@ template <>
 template <>
 inline
 void
-image<rgb>::decode<image<rgb>::format::png>(const array<byte>& buffer) {
+image<rgb>::decode<image<rgb>::format::png>(const array<byte>& buffer)
+{
     
     std::stringstream ss;
     ss.write((char*)buffer.data(), buffer.size());
@@ -397,6 +420,33 @@ template <>
 inline
 void
 image<rgba>::decode<image<rgba>::format::jpeg>(const array<byte>& buffer) {
+
+
+}
+
+template <>
+template <>
+inline
+void
+image<gray>::decode<image<gray>::format::qoi>(const array<byte>& buffer) {
+
+
+}
+
+template <>
+template <>
+inline
+void
+image<rgb>::decode<image<rgb>::format::qoi>(const array<byte>& buffer) {
+
+
+}
+
+template <>
+template <>
+inline
+void
+image<rgba>::decode<image<rgba>::format::qoi>(const array<byte>& buffer) {
 
 
 }

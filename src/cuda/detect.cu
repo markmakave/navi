@@ -1,8 +1,7 @@
-#include <cuda.h>
+#include <cuda_runtime.h>
 
 #include "cuda/matrix.cuh"
 #include "base/color.hpp"
-#include "slam/fast11.hpp"
 
 namespace lm {
 namespace cuda {

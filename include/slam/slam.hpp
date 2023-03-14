@@ -10,24 +10,6 @@
 #include <base/color.hpp>
 #include <base/socket.hpp>
 
-#ifdef DEBUG
-
-void*
-operator new(std::size_t size)
-{
-    std::cout << "Allocating " << size << " bytes" << std::endl;
-    return malloc(size);
-}
-
-void
-operator delete(void* ptr) noexcept
-{
-    std::cout << "Freeing " << ptr << std::endl;
-    free(ptr);
-}
-
-#endif
-
 namespace lm {
 namespace slam {
 

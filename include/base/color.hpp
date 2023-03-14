@@ -69,7 +69,7 @@ struct rgb
     }
 
     operator uint8_t() const {
-        return ((int)r + g + b) / 3;
+        return clamp<0, 255>(0.2161 * r + 0.7152 * g + 0.0722 * b);
     }
 
     static

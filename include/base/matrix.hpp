@@ -53,7 +53,7 @@ public:
 
     /// @brief Copy constructor
     /// @param m matrix to copy from
-    matrix(const matrix<T>& m) 
+    matrix(const matrix& m) 
     :   _height(m._height),
         _width(m._width)
     {
@@ -62,6 +62,18 @@ public:
         size_type size = this->size();
         for (size_type i = 0; i < size; ++i)
             _data[i] = m._data[i];
+    }
+
+    template <typename U>
+    matrix(const matrix<U>& m)
+    :   _height(m.height()),
+        _width(m.width())
+    {
+        _allocate();
+
+        size_type size = this->size();
+        for (size_type i = 0; i < size; ++i)
+            _data[i] = static_cast<value_type>(m.data()[i]);
     }
 
     /// @brief Move constructor
@@ -94,6 +106,21 @@ public:
             size_type size = this->size();
             for (size_type i = 0; i < size; ++i)
                 _data[i] = m._data[i];
+        }
+        return *this;
+    }
+
+    template <typename U>
+    matrix& 
+    operator = (const matrix<U>& m)
+    {
+        if (&m != this)
+        {
+            resize(m._height, m._width);
+            
+            size_type size = this->size();
+            for (size_type i = 0; i < size; ++i)
+                _data[i] = static_cast<value_type>(m._data[i]);
         }
         return *this;
     }

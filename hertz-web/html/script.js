@@ -3,7 +3,7 @@ class Camera {
         this.canvas = canvas;
         this.canvas.addEventListener("mousedown", this.onMouseDown.bind(this));
         this.canvas.addEventListener("mousemove", this.onMouseMove.bind(this));
-        this.canvas.addEventListener("wheel", this.onMouseWheel.bind(this));
+        // this.canvas.addEventListener("wheel", this.onMouseWheel.bind(this));
         this.canvas.addEventListener("keydown", this.onKeyDown.bind(this));
         this.canvas.addEventListener("keyup", this.onKeyUp.bind(this));
         this.canvas.addEventListener("contextmenu", (e) => e.preventDefault());
@@ -14,7 +14,7 @@ class Camera {
         };
         this.keys = {};
 
-        this.position = vec3.fromValues(0, 0, 0);
+        this.position = vec3.fromValues(0, 0, -100);
         this.forward = vec3.fromValues(0, 0, 1);
         this.right = vec3.fromValues(-1, 0, 0);
         this.up = vec3.fromValues(0, 1, 0);
@@ -415,7 +415,7 @@ connectWS();
 const width = 100
 const height = 100
 
-const value_offset = 35
+const value_offset = 0
 
 function convert(buffer) {
 
