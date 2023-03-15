@@ -14,7 +14,7 @@ detect(const matrix<lm::gray>& input, matrix<bool>& output)
     if (input.width() != output.width() || input.height() != output.height())
         output.resize(input.height(), input.width());
 
-    #pragma omp parallel for collapse(2)
+    #pragma omp parallel for collapse(2) schedule(static)
     for (unsigned y = 3; y < input.height() - 3; ++y)
     {
         for (unsigned x = 3; x < input.width() - 3; ++x)

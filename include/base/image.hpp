@@ -6,7 +6,6 @@
 #include "base/types.hpp"
 
 #include <png++/png.hpp>
-#include <jpeglib.h>
 #include <cstring>
 #include <sstream>
 
@@ -178,35 +177,23 @@ public:
         file.read((char*)buffer.data(), size);
 
         if (ext == "png")
-        {
             decode<format::png>(buffer);
-        }
-        else if (ext == "jpg" || ext == "jpeg")
-        {
-            decode<format::jpeg>(buffer);
-        }
+        else if (ext == "qoi")
+            decode<format::qoi>(buffer);
     }
-
+    
     void
     write(const char* filename, int quality = 100) const
     {
         std::string ext = filename;
         ext = ext.substr(ext.find_last_of(".") + 1);
 
-        lm::array<byte> buffer;
+        array<byte> buffer;
 
         if (ext == "png")
-        {
             buffer = encode<format::png>();
-        } 
-        else if (ext == "jpg" || ext == "jpeg")
-        {
-            buffer = encode<format::jpeg>(quality);
-        }
         else if (ext == "qoi")
-        {
             buffer = encode<format::qoi>();
-        }
 
         std::ofstream file(filename, std::ios::binary);
         file.write((char*)buffer.data(), buffer.size());
@@ -215,7 +202,6 @@ public:
     enum class format
     {
         png,
-        jpeg,
         qoi
     };
 
@@ -223,232 +209,9 @@ public:
     array<byte>
     encode() const;
 
-    template <format fmt>
-    array<byte>
-    encode(int quality) const;
-
     template <enum format fmt>
     void
     decode(const array<byte>& buffer);
 };
-
-template <>
-template <>
-inline
-array<byte>
-image<gray>::encode<image<gray>::format::png>() const
-{
-    array<byte> buffer;
-
-    png::image<png::gray_pixel> img(this->width(), this->height());
-    for (unsigned y = 0; y < this->height(); ++y)
-    {
-        auto this_row = this->row(y);
-        auto& img_row = img.get_row(y);
-
-        for (unsigned x = 0; x < this->width(); ++x)
-        {
-            img_row[x] = png::gray_pixel(this_row[x]);
-        }
-    }
-
-    std::stringstream ss;
-    img.write_stream(ss);
-    ss.seekg(0, std::ios::end);
-    size_type size = ss.tellg();
-    ss.seekg(0, std::ios::beg);
-
-    buffer.resize(size);
-    ss.read((char*)buffer.data(), size);
-
-    return buffer;
-}
-
-template <>
-template <>
-inline
-array<byte>
-image<rgb>::encode<image<rgb>::format::png>() const
-{
-    
-
-    return lm::array<lm::byte>();
-}
-
-template <>
-template <>
-inline
-array<byte>
-image<rgba>::encode<image<rgba>::format::png>() const
-{
-    
-
-    return lm::array<lm::byte>();
-}
-
-template <>
-template <>
-inline
-array<byte>
-image<gray>::encode<image<gray>::format::jpeg>(int quality) const
-{
-    
-
-    return lm::array<lm::byte>();
-}
-
-template <>
-template <>
-inline
-array<byte>
-image<rgb>::encode<image<rgb>::format::jpeg>(int quality) const
-{
-    
-
-    return lm::array<lm::byte>();
-}
-
-template <>
-template <>
-inline
-array<byte>
-image<rgba>::encode<image<rgba>::format::jpeg>(int quality) const
-{
-    
-
-    return lm::array<lm::byte>();
-}
-
-template <>
-template <>
-inline
-array<byte>
-image<gray>::encode<image<gray>::format::qoi>() const
-{
-    
-
-    return lm::array<lm::byte>();
-}
-
-template <>
-template <>
-inline
-array<byte>
-image<rgb>::encode<image<rgb>::format::qoi>() const
-{
-    
-
-    return lm::array<lm::byte>();
-}
-
-template <>
-template <>
-inline
-array<byte>
-image<rgba>::encode<image<rgba>::format::qoi>() const
-{
-    
-
-    return lm::array<lm::byte>();
-}
-
-template <>
-template <>
-inline
-void
-image<gray>::decode<image<gray>::format::png>(const array<byte>& buffer)
-{
-
-
-}
-
-template <>
-template <>
-inline
-void
-image<rgb>::decode<image<rgb>::format::png>(const array<byte>& buffer)
-{
-    
-    std::stringstream ss;
-    ss.write((char*)buffer.data(), buffer.size());
-
-    png::image<png::rgb_pixel> img(ss);
-
-    resize(img.get_width(), img.get_height());
-
-    for (unsigned y = 0; y < img.get_height(); ++y)
-    {
-        auto this_row = row(y);
-        auto& img_row = img.get_row(y);
-
-        for (unsigned x = 0; x < img.get_width(); ++x)
-        {
-            this_row[x] = reinterpret_cast<rgb&>(img_row[x]);
-        }
-    }
-}
-
-template <>
-template <>
-inline
-void
-image<rgba>::decode<image<rgba>::format::png>(const array<byte>& buffer) {
-
-
-}
-
-template <>
-template <>
-inline
-void
-image<gray>::decode<image<gray>::format::jpeg>(const array<byte>& buffer) {
-
-
-}
-
-template <>
-template <>
-inline
-void
-image<rgb>::decode<image<rgb>::format::jpeg>(const array<byte>& buffer) {
-
-
-}
-
-template <>
-template <>
-inline
-void
-image<rgba>::decode<image<rgba>::format::jpeg>(const array<byte>& buffer) {
-
-
-}
-
-template <>
-template <>
-inline
-void
-image<gray>::decode<image<gray>::format::qoi>(const array<byte>& buffer) {
-
-
-}
-
-template <>
-template <>
-inline
-void
-image<rgb>::decode<image<rgb>::format::qoi>(const array<byte>& buffer) {
-
-
-}
-
-template <>
-template <>
-inline
-void
-image<rgba>::decode<image<rgba>::format::qoi>(const array<byte>& buffer) {
-
-
-}
 
 } // namespace lm

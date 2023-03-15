@@ -33,7 +33,7 @@ int main()
         image<rgb> l_rgb("../dataset/car.png"),
                    r_rgb("../dataset/car.png");
 
-        image<gray> l_gray(l_rgb), 
+        image<gray> l_gray(l_rgb),
                     r_gray(r_rgb);
 
         matrix<bool> l_features(l_gray.height(), l_gray.width(), false),

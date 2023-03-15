@@ -9,9 +9,14 @@ class log
 {
 public:
 
-    #define clear_string   "\033[0m"
+    #define cyan    "\033[36m"
+    #define magenta "\033[35m"
+    #define yellow  "\033[33m"
+    #define red     "\033[31m"
+    #define clear   "\033[0m"
 
-    struct config {
+    struct config
+    {
         std::ostream& stream;
         const char* label;
         const char* color;
@@ -19,10 +24,10 @@ public:
         const char* terminator;
     };
 
-    #define info_config    { std::cout, "[ INFO ]",    "\033[36m", " ", "\n" }
-    #define debug_config   { std::cout, "[ DEBUG ]",   "\033[35m", " ", "\n" }
-    #define warning_config { std::cout, "[ WARNING ]", "\033[31m", " ", "\n" }
-    #define error_config   { std::cerr, "[ ERROR ]",   "\033[33m", " ", "\n" }
+    #define info_config    { std::cout, "[ INFO ]",    cyan,    " ", "\n" }
+    #define debug_config   { std::cout, "[ DEBUG ]",   magenta, " ", "\n" }
+    #define warning_config { std::cerr, "[ WARNING ]", yellow,  " ", "\n" }
+    #define error_config   { std::cerr, "[ ERROR ]",   red,     " ", "\n" }
 
     template <typename ...Args>
     static void
@@ -30,7 +35,7 @@ public:
     {
         cfg.stream << cfg.color;
         console(cfg, cfg.label, date(), args...);
-        cfg.stream << clear_string;
+        cfg.stream << clear;
     }
 
     template <typename ...Args>
@@ -63,12 +68,12 @@ public:
 
 private:
 
-    log()                       = delete;
-    log(const log&)             = delete;
-    log(log&&)                  = delete;
-    log& operator=(const log&)  = delete;
-    log& operator=(log&&)       = delete;
-    ~log()                      = delete;
+    log()                      = delete;
+    log(const log&)            = delete;
+    log(log&&)                 = delete;
+    log& operator=(const log&) = delete;
+    log& operator=(log&&)      = delete;
+    ~log()                     = delete;
 
     template <typename Arg>
     static void
@@ -92,9 +97,15 @@ private:
         static char buf[80];
         auto now = std::chrono::system_clock::now();
         auto in_time_t = std::chrono::system_clock::to_time_t(now);
-        std::strftime(buf, sizeof(buf), "[%d-%m-%Y %X]", std::localtime(&in_time_t));
+        std::strftime(buf, sizeof(buf), "[%d.%m.%Y %X]", std::localtime(&in_time_t));
         return buf;
     }
+
+    #undef cyan
+    #undef magenta
+    #undef yellow
+    #undef red
+    #undef clear
 
 };
 

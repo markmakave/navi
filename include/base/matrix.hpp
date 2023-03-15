@@ -307,7 +307,7 @@ public:
         return _data;
     }
 
-private:
+protected:
 
     void
     _allocate()
