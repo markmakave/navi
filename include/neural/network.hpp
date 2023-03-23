@@ -24,29 +24,50 @@
 
 #pragma once
 
-#include <cuda_runtime.h>
-
-#include "cuda/matrix.cuh"
-#include "cuda/brief.cuh"
+#include "lumina.hpp"
 
 namespace lm {
-namespace cuda {
+namespace neural {
 
-__global__
-void
-detect(
-    const matrix<lm::gray> input, 
-          matrix<bool> output
-);
+class network
+{
+public:
 
-__global__
-void
-descript(
-    const matrix<gray>                   image, 
-    const matrix<bool>                   features,
-    const brief<256>                     engine,
-          matrix<brief<256>::descriptor> descriptors
-);
+    template <typename... Args>
+    network(Args... args)
+    {
+        unsigned sizes[sizeof...(Args)] = {args...};
+        _weights.resize(sizeof...(Args))
+
+        for (unsigned i = 0; i < sizeof...(Args) - 1; ++i)
+        {
+            _weights[i].resize(sizes[i+1], sizes[i]);
+        }
+    }
+
+    const array<float>&
+    forward(const array<float>& in) const
+    {
+        cuda::array<float> din, dout;
+        din << in;
+
+        for (int i = 0; i < _weights.size(); ++i)
+        {
+            blas::mv(_weights[i], din, dout);
+            din.swap(dout);
+        }
+
+        array<float> out;
+        dout >> out;
+
+        return out;
+    }
+
+
+protected:
+
+    array<cuda::matrix<float>> _weights;
+};
 
 }
-}
+} // namespace lm

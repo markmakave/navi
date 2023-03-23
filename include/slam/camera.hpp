@@ -153,7 +153,7 @@ public:
             throw std::runtime_error("Camera buffer dequeuing failed");
         }
 
-        for (size_t i = 0; i < frame.size(); ++i) {
+        for (int i = 0; i < frame.size(); ++i) {
             frame.data()[i] = buffers[buf.index][i * 2];
         }
 
@@ -184,7 +184,7 @@ public:
             throw std::runtime_error("Camera buffer dequeuing failed");
         }
 
-        for (size_t i = 0; i < frame.size() / 2; ++i) {
+        for (int i = 0; i < frame.size() / 2; ++i) {
             uint8_t y1  = buffers[buf.index][i * 4 + 0];
             uint8_t u   = buffers[buf.index][i * 4 + 1];
             uint8_t y2  = buffers[buf.index][i * 4 + 2];

@@ -24,16 +24,15 @@
 
 #pragma once
 
-// #include "util/log.hpp"
+#include "base/memory.hpp"
 
-#define DEBUG_LOG(message, ...) { /*lm::log::debug(message, ##__VA_ARGS__);*/ }
-#define ERROR_LOG(message, ...) { /*lm::log::error(message, ##__VA_ARGS__);*/ }
+#include <cstdint>
 
 namespace lm {
 
 /// @brief Matrix class with basic operations and STL-like interface
 /// @tparam T Type of the elements in the matrix (int, float, double, etc.)
-template <typename T>
+template <typename T, typename _alloc = heap_allocator<T>>
 struct matrix
 {
 public:
@@ -45,21 +44,16 @@ public:
     typedef const value_type&   const_reference;
     typedef value_type*         iterator;
     typedef const value_type*   const_iterator;
-    typedef unsigned            size_type;
-    typedef int                 difference_type;
+    typedef int64_t             size_type;
 
 public:
 
-    /// @brief Default constructor
     matrix()
     :   _data(nullptr),
         _height(0),
         _width(0)
     {}
 
-    /// @brief Constructor with height and width
-    /// @param height Height of the matrix
-    /// @param width Width of the matrix
     matrix(size_type height, size_type width) 
     :   _height(height),
         _width(width)
@@ -75,8 +69,6 @@ public:
         fill(value);
     }
 
-    /// @brief Copy constructor
-    /// @param m matrix to copy from
     matrix(const matrix& m) 
     :   _height(m._height),
         _width(m._width)
@@ -100,8 +92,6 @@ public:
             _data[i] = static_cast<value_type>(m.data()[i]);
     }
 
-    /// @brief Move constructor
-    /// @param m matrix to move from
     matrix(matrix&& m) 
     :   _data(m._data),
         _height(m._height),
@@ -112,14 +102,11 @@ public:
         m._width = 0;
     }
     
-    /// @brief Destructor
     ~matrix()
     {
         _deallocate();
     }
 
-    /// @brief Copy assignment operator
-    /// @param m matrix to copy from
     matrix& 
     operator = (const matrix& m)
     {
@@ -149,8 +136,6 @@ public:
         return *this;
     }
 
-    /// @brief Move assignment operator
-    /// @param m matrix to move from
     matrix& 
     operator = (matrix&& m)
     {
@@ -169,9 +154,6 @@ public:
         return *this;
     }
 
-    /// @brief Resizes the matrix to the given dimensions
-    /// @param height New height of the matrix
-    /// @param width New width of the matrix
     void
     resize(size_type height, size_type width)
     {
@@ -191,8 +173,6 @@ public:
         }
     }
 
-    /// @brief Fill the matrix with a given value
-    /// @param fillament Value to fill the matrix with
     void
     fill(const_reference fillament)
     {
@@ -201,98 +181,68 @@ public:
             _data[i] = fillament;
     }
 
-    /// @brief Returns matrix row pointer
-    /// @param index Row index
-    /// @return Pointer to the row
     pointer
     row(size_type index) 
     {
         return _data + index * _width;
     }
 
-    /// @brief Returns matrix row pointer
-    /// @param index Row index
-    /// @return Pointer to the row
     const_pointer
     row(size_type index) const
     {
         return _data + index * _width;
     }
 
-    /// @brief Returns matrix row
-    /// @param index Row index
-    /// @return Row
     pointer 
     operator [] (size_type index)
     {
         return row(index);
     }
 
-    /// @brief Returns matrix row
-    /// @param index Row index
-    /// @return Row
     const_pointer 
     operator [] (size_type index) const 
     {
         return row(index);
     }
 
-    /// @brief Element access operator
-    /// @param y 
-    /// @param x
-    /// @return Reference to the element
     reference
     operator () (size_type y, size_type x)
     {
         return row(y)[x];
     }
 
-    /// @brief Element access operator
-    /// @param y 
-    /// @param x 
-    /// @return Const reference to the element
     const_reference
     operator () (size_type y, size_type x) const
     {
         return row(y)[x];
     }
 
-    /// @brief Element access operator
-    /// @param y Row index
-    /// @param x Column index
-    /// @return Reference to the element
     reference
     at(size_type y, size_type x)
     {
         static value_type value;
-        if (y >= _height || x >= _width)
+        if (y >= _height || x >= _width || y < 0 || x < 0)
         {
-            value = value_type();
+            value = 0;
             return value;
         }
 
         return _data[y * _width + x];
     }
 
-    /// @brief Element access operator
-    /// @param y Row index
-    /// @param x Column index
-    /// @return Reference to the element
     const_reference
     at(size_type y, size_type x) const
     {
         static value_type value;
-        if (y >= _height || x >= _width)
+        if (y >= _height || x >= _width || y < 0 || x < 0)
         {
-            value = value_type();
+            value = 0;
             return value;
         }
 
         return _data[y * _width + x];
     }
 
-    /// @brief Matrix size getter
-    /// @return Matrix size in elements
     size_type 
     size() const
     {
@@ -336,28 +286,13 @@ protected:
     void
     _allocate()
     {
-        DEBUG_LOG("Allocating", size() * sizeof(T), "bytes on HEAP");
-
-        if (size() == 0)
-        {
-            _data = nullptr;
-        }
-        else
-        {
-            _data = reinterpret_cast<pointer>(operator new[](size() * sizeof(T)));
-            if (_data == nullptr)
-                ERROR_LOG("Memory allocation failed");
-        }
+        _data = _alloc::allocate(size());
     }
 
     void
     _deallocate()
     {
-        if (_data != nullptr)
-        {
-            DEBUG_LOG("Deallocating", (void*)_data, "from HEAP");
-            operator delete[](_data);
-        }
+        _alloc::deallocate(_data);
     }
 
 protected:

@@ -24,29 +24,48 @@
 
 #pragma once
 
-#include <cuda_runtime.h>
+#include <cublas_v2.h>
 
+#include "cuda/array.cuh"
 #include "cuda/matrix.cuh"
-#include "cuda/brief.cuh"
 
 namespace lm {
-namespace cuda {
+namespace blas {
 
-__global__
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
 void
-detect(
-    const matrix<lm::gray> input, 
-          matrix<bool> output
+axpy(
+    const T               alpha,
+    const cuda::array<T>& x, 
+          cuda::array<T>& y, 
+    const cuda::stream&   stream = cuda::stream::main
 );
 
-__global__
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
 void
-descript(
-    const matrix<gray>                   image, 
-    const matrix<bool>                   features,
-    const brief<256>                     engine,
-          matrix<brief<256>::descriptor> descriptors
+mv(
+    const cuda::matrix<T>& A, 
+    const cuda::array<T>&  x, 
+          cuda::array<T>&  y, 
+    const cuda::stream&    stream = cuda::stream::main
 );
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+void
+mm(
+    const cuda::matrix<T>& A,
+    const cuda::matrix<T>& B,
+          cuda::matrix<T>& C,
+    const cuda::stream&    stream = cuda::stream::main
+);
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }
 }

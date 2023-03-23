@@ -24,14 +24,14 @@
 
 #pragma once
 
+#include "base/array.hpp"
+#include "cuda/memory.cuh"
+
 namespace lm {
 namespace cuda {
 
-template <typename, unsigned ...dummy>
-struct array;
-
-template <typename T, unsigned N>
-struct array<T, N>
+template <typename T, typename _alloc = device_allocator<T>>
+struct array
 {
 public:
 
@@ -42,33 +42,118 @@ public:
     typedef const value_type&   const_reference;
     typedef value_type*         iterator;
     typedef const value_type*   const_iterator;
-    typedef unsigned            size_type;
-    typedef int                 difference_type;
+    typedef int64_t             size_type;
 
 public:
 
     __host__ __device__
     array()
+    :   _data(nullptr),
+        _size(0)
     {}
 
     __host__ __device__
-    array(const_reference value)
+    array(size_type size)
+    :   _size(size)
     {
-        fill(value);
+        _allocate();
     }
 
     __host__ __device__
-    reference
+    array(const array& a)
+    :   _size(a._size)
+    {
+        _allocate();
+        _alloc::memcpy(_data, a._data, a._size);
+    }
+
+    __host__ __device__
+    array(array&& a)
+    :   _data(a._data),
+        _size(a._size)
+    {}
+
+    __host__ __device__
+    size_type
+    size() const
+    {
+        return _size;
+    }
+
+    __host__ __device__
+    const_pointer
+    data() const
+    {
+        return _data;
+    }
+
+    __host__ __device__
+    pointer
+    data()
+    {
+        return _data;
+    }
+
+    __host__ __device__
+    auto
     operator [] (size_type index)
     {
-        return _data[index];
+        return _alloc::access(_data + index);
+    }
+
+    __host__
+    void
+    operator << (const lm::array<value_type>& a)
+    {
+        if (_size != a.size())
+            resize(a.size());
+
+        memcpy(_data, a.data(), a.size() * sizeof(value_type), D2H);
+    }
+
+    __host__
+    void
+    operator >> (lm::array<float>& a) const
+    {
+        if (a.size() != _size)
+            a.resize(_size);
+
+        memcpy(a.data(), _data, _size * sizeof(value_type), H2D);
+    }
+
+    __host__ __device__
+    void
+    swap(array& a)
+    {
+        pointer temp_data = a._data;
+        size_type temp_size = a._size;
+
+        a._data = _data;
+        a._size = _size;
+
+        _data = temp_data;
+        _size = temp_size;
     }
 
 private:
 
-    value_type _data[N];
+    void
+    _allocate()
+    {
+        _data = _alloc::allocate(size());
+    }
 
-}
+    void
+    _deallocate()
+    {
+        _alloc::deallocate(_data);
+    }
+
+protected:
+
+    pointer _data;
+    size_type _size;
+};
 
 }
 }

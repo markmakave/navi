@@ -48,8 +48,7 @@ public:
     typedef const value_type&   const_reference;
     typedef value_type*         iterator;
     typedef const value_type*   const_iterator;
-    typedef unsigned            size_type;
-    typedef int                 difference_type;
+    typedef int64_t             size_type;
     
 public:
 

@@ -26,113 +26,225 @@
 
 #include <cuda_runtime.h>
 
+#include "cuda/cuda.hpp"
+
 namespace lm {
 namespace cuda {
 
 template <typename T>
-class device_allocator {
+class allocator
+{
+public:
+
+    typedef T                   value_type;
+    typedef value_type*         pointer;
+    typedef const value_type*   const_pointer;
+    typedef value_type&         reference;
+    typedef const value_type&   const_reference;
+    typedef unsigned            size_type;
+
+public:
 
     __host__ __device__
     static
-    void*
-    allocate(size_t size)
+    pointer
+    allocate(size_type);
+
+    __host__ __device__
+    static
+    void
+    deallocate(pointer);
+
+    __host__ __device__
+    static
+    const_reference
+    access(const_pointer p, size_type index)
+    {
+        return p[index];
+    }
+
+    __host__ __device__
+    static
+    reference
+    access(pointer p, size_type index)
+    {
+        return p[index];
+    }
+
+};
+
+template <typename T>
+class proxy
+{
+public:
+
+    typedef T                 value_type;
+    typedef value_type*       pointer;
+    typedef const value_type& const_reference;
+    typedef unsigned          size_type;
+
+public:
+
+    __host__
+    proxy(pointer ptr)
+    :   _ptr(ptr)
+    {}
+
+    __host__
+    proxy&
+    operator = (const_reference value)
+    {
+        cuda::memcpy(_ptr, &value, sizeof(value), cuda::H2D);
+        return *this;
+    }
+
+    __host__
+    operator value_type() const
+    {
+        value_type value;
+        cuda::memcpy(&value, _ptr, sizeof(value), cuda::D2H);
+        return value;
+    }
+
+    __host__
+    proxy
+    operator [] (size_type index)
+    {
+        return proxy(_ptr + index);
+    }
+
+private:
+
+    pointer _ptr;
+};
+
+template <typename T>
+class device_allocator : public allocator<T>
+{
+public:
+
+    typedef T                   value_type;
+    typedef value_type*         pointer;
+    typedef const value_type*   const_pointer;
+    typedef value_type&         reference;
+    typedef const value_type&   const_reference;
+    typedef unsigned            size_type;
+
+public:
+
+    __host__ __device__
+    static
+    pointer
+    allocate(size_type size)
     {
         void* ptr;
 
         #ifdef __CUDA_ARCH__
-
         ptr = operator new[](size * sizeof(T));
-        if (ptr == nullptr)
-            printf("[ DEVICE ] memory allocation failed\n");
-
         #else
-
-        cudaError_t status = cudaMalloc((void**)&ptr, size * sizeof(T));
-        if (status != cudaSuccess)
-            lm::log::error("cudaMalloc failed:", cudaGetErrorString(status));
-
+        ptr = cuda::malloc(size * sizeof(T));
         #endif
 
-        return ptr;
+        return reinterpret_cast<pointer>(ptr);
     }
 
     __host__ __device__
     static
     void
-    deallocate(void* ptr)
+    deallocate(pointer ptr)
     {
         #ifdef __CUDA_ARCH__
-
         operator delete[](ptr);
-
         #else
+        cuda::free(ptr);
+        #endif
+    }
 
-        cudaError_t status = cudaFree(ptr);
-        if (status != cudaSuccess)
-            lm::log::error("cudaFree failed:", cudaGetErrorString(status));
-
+    __host__ __device__
+    static
+    auto
+    access(pointer p)
+    {
+        #ifdef __CUDA_ARCH__
+        return *p;
+        #else
+        return proxy<value_type>(p);
         #endif
     }
 
 };
 
 template <typename T>
-class host_allocator {
+class pinned_allocator : public allocator<T>
+{
+public:
+
+    typedef T                   value_type;
+    typedef value_type*         pointer;
+    typedef const value_type*   const_pointer;
+    typedef value_type&         reference;
+    typedef const value_type&   const_reference;
+    typedef unsigned            size_type;
+
+public:
 
     __host__
     static
-    void*
+    pointer
     allocate(size_t size)
     {
         void* ptr;
         
-        cudaError_t status = cudaMallocHost((void**)&ptr, size * sizeof(T));
-        if (status != cudaSuccess)
-            lm::log::error("cudaMallocHost failed:", cudaGetErrorString(status));
+        cudaMallocHost((void**)&ptr, size * sizeof(T));
 
-        return ptr;
+        return reinterpret_cast<pointer>(ptr);
     }
 
     __host__
     static
     void
-    deallocate(void* ptr)
+    deallocate(pointer ptr)
     {
-        cudaError_t status = cudaFree(ptr);
-        if (status != cudaSuccess)
-            lm::log::error("cudaFree failed:", cudaGetErrorString(status));
+        cudaFree(ptr);
     }
 
-}
+};
 
 template <typename T>
-class managed_allocator {
+class managed_allocator : public allocator<T>
+{
+public:
+
+    typedef T                   value_type;
+    typedef value_type*         pointer;
+    typedef const value_type*   const_pointer;
+    typedef value_type&         reference;
+    typedef const value_type&   const_reference;
+    typedef unsigned            size_type;
+
+public:
 
     __host__
     static
-    void*
+    pointer
     allocate(size_t size)
     {
         void* ptr;
         
-        cudaError_t status = cudaMallocManaged((void**)&ptr, size * sizeof(T));
-        if (status != cudaSuccess)
-            lm::log::error("cudaMallocHost failed:", cudaGetErrorString(status));
+        cudaMallocManaged((void**)&ptr, size * sizeof(T));
 
-        return ptr;
+        return reinterpret_cast<pointer>(ptr);
     }
 
     __host__
     static
     void
-    deallocate(void* ptr)
+    deallocate(pointer ptr)
     {
-        cudaError_t status = cudaFree(ptr);
-        if (status != cudaSuccess)
-            lm::log::error("cudaFree failed:", cudaGetErrorString(status));
+        cudaFree(ptr);
     }
 
-}
+};
 
 }
 }

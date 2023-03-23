@@ -30,12 +30,16 @@
 
 #include "base/matrix.hpp"
 #include "base/color.hpp"
-#include "base/vec.hpp"
 
 namespace lm {
 namespace slam {
 
 struct feature;
+
+struct dim2
+{
+    float x, y;
+};
 
 template <unsigned N>
 class brief

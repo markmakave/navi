@@ -24,26 +24,27 @@
 
 #pragma once
 
+#include <alloca.h>
+
 namespace lm {
 
 template <typename T>
-class heap_allocator {
+class heap_allocator
+{
+public:
 
     static
-    void*
+    T*
     allocate(size_t size)
     {
         void* ptr = operator new[](size * sizeof(T));
 
-        if (ptr == nullptr)
-            lm::log::error("memory allocation failed");
-
-        return ptr;
+        return reinterpret_cast<T*>(ptr);
     }
 
     static
     void
-    deallocate(void* ptr)
+    deallocate(T* ptr)
     {
         operator delete[](ptr);
     }
@@ -51,27 +52,26 @@ class heap_allocator {
 };
 
 template <typename T>
-class stack_allocator {
+class stack_allocator
+{
+public:
 
     static
-    void*
+    T*
     allocate(size_t size)
     {
         void* ptr = alloca(size * sizeof(T));
 
-        if (ptr == nullptr)
-            lm::log::error("memory allocation failed");
-
-        return ptr;
+        return reinterpret_cast<T*>(ptr);
     }
 
     static
     void
-    deallocate(void* ptr)
+    deallocate(T* ptr)
     {
         // nop
     }
 
-}
+};
 
 }

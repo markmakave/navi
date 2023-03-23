@@ -1,121 +1,53 @@
 #include <iostream>
+#include <random>
 
-#include <cuda_runtime.h>
+#include "lumina.hpp"
+#include "util/timer.hpp"
 
-#include <slam/detect.hpp>
-
-#include <base/image.hpp>
-#include <base/matrix.hpp>
-#include <base/color.hpp>
-
-#include <cuda/cuda.hpp>
-
-#include <cuda/matrix.cuh>
-#include <cuda/kernel.cuh>
-
-#include <util/timer.hpp>
-#include <util/profiler.hpp>
-
-#define ITERATIONS 10000
+#define ITERATIONS 1
 #define RADIUS 2
+#define GPU
 
 #define LM_FRAMEWORK_VERSION(v) using namespace lm
 
 LM_FRAMEWORK_VERSION(1.0);
 
+void
+distort(const matrix<rgb>& in, matrix<rgb>& out)
+{
+    out.resize(in.height(), in.width());
+
+    double k1 = 0.2, k2 = 0, k3 = 0;
+
+    auto index = [&](double r) -> double {
+        return 1 + k1*r*r + k2*r*r*r*r + k3*r*r*r*r*r*r;
+    };
+
+    auto normalize = [](int x, int dimention) -> double {
+        return double(x) / dimention * 2 - 1;
+    };
+
+    auto unnormalize = [](double x, int dimention) -> double {
+        return (x + 1) * dimention / 2;
+    };
+
+    for (int y = 0; y < in.height(); ++y)
+        for (int x = 0; x < in.width(); ++x)
+        {
+            double x_normalized = normalize(x, in.width());
+            double y_normalized = normalize(y, in.height());
+
+            double r = x_normalized*x_normalized + y_normalized*y_normalized;
+
+            out[y][x] = in.at(unnormalize(y_normalized * index(r), in.height()), unnormalize(x_normalized * index(r), in.width()));
+        }
+}
+
 int main()
 {
-    profiler::begin("trace.json");
+    image<rgb> m1("../dataset/photo.png"), m2;
 
-    // CPU
-    LM_PROFILE("CPU")
-    {
-        image<rgb> l_rgb("../dataset/car.png"),
-                   r_rgb("../dataset/car.png");
+    distort(m1, m2);
 
-        image<gray> l_gray(l_rgb),
-                    r_gray(r_rgb);
-
-        matrix<bool> l_features(l_gray.height(), l_gray.width(), false),
-                     r_features(r_gray.height(), r_gray.width(), false);
-        
-        {
-            timer timer("cpu", ITERATIONS);
-
-            for (int i = 0; i < ITERATIONS; ++i)
-            {
-                slam::detect(l_gray, l_features);
-                slam::detect(r_gray, r_features);
-            }
-        }
-
-        for (unsigned y = RADIUS; y < l_features.height() - RADIUS; ++y)
-            for (unsigned x = RADIUS; x < l_features.width() - RADIUS; ++x)
-            {
-                if (l_features[y][x])
-                    l_gray.circle(x, y, RADIUS, 255);
-
-                if (r_features[y][x])
-                    r_gray.circle(x, y, RADIUS, 255);
-            }
-
-        l_gray.write("cpu_l_out.png");
-        r_gray.write("cpu_r_out.png");
-    }
-
-    // GPU
-    LM_PROFILE("GPU")
-    {
-        image<rgb> l_rgb("../dataset/car.png"),
-                   r_rgb("../dataset/car.png");
-
-        image<gray> l_gray(l_rgb), 
-                    r_gray(r_rgb);
-
-        cuda::matrix<gray> dl_gray(l_gray.height(), l_gray.width()),
-                           dr_gray(r_gray.height(), r_gray.width());
-
-        matrix<bool> l_features(l_gray.height(), l_gray.width()),
-                     r_features(r_gray.height(), r_gray.width());
-
-        cuda::matrix<bool> dl_features(l_features.height(), l_features.width()),
-                           dr_features(r_features.height(), r_features.width());
-
-        cuda::stream l_stream, r_stream;
-        cuda::kernel detect(cuda::detect);
-
-        {
-            timer _("gpu", ITERATIONS);
-
-            for (int i = 0; i < ITERATIONS; ++i)
-            {
-                cuda::memcpy_async(dl_gray.data(), l_gray.data(), l_gray.size() * sizeof(gray), cuda::H2D, l_stream);
-                cuda::memcpy_async(dr_gray.data(), r_gray.data(), r_gray.size() * sizeof(gray), cuda::H2D, r_stream);
-
-                detect({dl_gray.width() / 8 + 1, dl_gray.height() / 8 + 1}, {8, 8}, l_stream, dl_gray, dl_features);
-                detect({dr_gray.width() / 8 + 1, dr_gray.height() / 8 + 1}, {8, 8}, r_stream, dr_gray, dr_features);
-
-                cuda::memcpy_async(l_features.data(), dl_features.data(), dl_features.size() * sizeof(bool), cuda::D2H, l_stream);
-                cuda::memcpy_async(r_features.data(), dr_features.data(), dr_features.size() * sizeof(bool), cuda::D2H, r_stream);
-
-                l_stream.synchronize();
-                r_stream.synchronize();
-            }
-        }
-
-        for (unsigned y = RADIUS; y < l_features.height() - RADIUS; ++y)
-            for (unsigned x = RADIUS; x < l_features.width() - RADIUS; ++x)
-            {
-                if (l_features[y][x])
-                    l_gray.circle(x, y, RADIUS, 255);
-
-                if (r_features[y][x])
-                    r_gray.circle(x, y, RADIUS, 255);
-            }
-
-        l_gray.write("gpu_l_out.png");
-        r_gray.write("gpu_r_out.png");
-    }
-
-    profiler::end();
+    m2.write("distortion.png");
 }

@@ -26,6 +26,7 @@
 
 #include <cuda_runtime.h>
 #include <iostream>
+#include <cstddef>
 
 #include "util/log.hpp"
 
@@ -128,10 +129,10 @@ enum memcpy_kind {
 };
 
 void
-memcpy(void* dst, void* src, size_t size, memcpy_kind kind);
+memcpy(void* dst, const void* src, size_t size, memcpy_kind kind);
 
 void
-memcpy_async(void* dst, void* src, size_t size, memcpy_kind kind, const stream& stream);
+memcpy_async(void* dst, const void* src, size_t size, memcpy_kind kind, const stream& stream);
 
 }
 }

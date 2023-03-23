@@ -13,8 +13,10 @@ fast11(const lm::gray *p, int origin, int t);
 
 __global__
 void
-detect(const lm::cuda::matrix<lm::gray> input, lm::cuda::matrix<bool> output)
-{
+detect(
+    const lm::cuda::matrix<lm::gray> input, 
+          lm::cuda::matrix<bool>     output
+) {
     unsigned x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -28,7 +30,7 @@ detect(const lm::cuda::matrix<lm::gray> input, lm::cuda::matrix<bool> output)
         input[y][x - 3], input[y - 1][x - 3], input[y - 2][x - 2], input[y - 3][x - 1]
     };
 
-    output[y][x] = fast11(circle, input[y][x], 10);
+    output[y][x] = fast11(circle, input[y][x], 30);
 }
 
 static

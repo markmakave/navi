@@ -24,6 +24,14 @@
 
 #pragma once
 
+#include <iostream>
+#include <random>
+#include <cstdint>
+
+#include "cuda/array.cuh"
+#include "cuda/matrix.cuh"
+#include "base/color.hpp"
+
 namespace lm {
 namespace cuda {
 
@@ -37,11 +45,87 @@ class brief
 {
 public:
 
+    struct descriptor
+    {
+        uint64_t value[4] = {};
+    };
 
+    point_pair* net;
 
-private:
+public:
 
-    array<point_pair, N> net;
+    __host__
+    brief()
+    {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        static std::binomial_distribution<int> dist(50, 0.5);
+
+        cuda::managed_allocator<point_pair>::allocate(N);
+
+        for (int i = 0; i < 256; ++i)
+        {
+            auto& pair = net[i];
+
+            do {
+                pair.x1 = dist(gen) - 25;
+            } while (pair.x1 >= 25 || pair.x1 <= -25);
+
+            do {
+                pair.y1 = dist(gen) - 25;
+            } while (pair.y1 >= 25 || pair.y1 <= -25);
+
+            do {
+                pair.x2 = dist(gen) - 25;
+            } while (pair.x2 >= 25 || pair.x2 <= -25);
+
+            do {
+                pair.y2 = dist(gen) - 25;
+            } while (pair.y2 >= 25 || pair.y2 <= -25);
+        }
+    }
+
+    __device__
+    descriptor
+    descript(int x, int y, const matrix<gray>& image) const
+    {
+        descriptor desc;
+
+        for (int i = 0; i < 4; ++i)
+            for (int j = 0; j < 64; ++j)
+            {
+                int index = i * 64 + j; 
+
+                int val1 = image[y + net[index].y1][x + net[index].x1];
+                int val2 = image[y + net[index].y2][x + net[index].x2];
+
+                desc.value[i] = desc.value[i] & ((val1 > val2) << j);
+            }
+
+        return desc;
+    }
+
+    __host__
+    ~brief()
+    {
+        cuda::managed_allocator<point_pair>::deallocate(net);
+    }
+
+    // __host__
+    // image<rgb>
+    // draw() const
+    // {
+    //     image<rgb> image(500, 500, 0);
+
+    //     for (int i = 0; i < 256; ++i)
+    //     {
+    //         const auto& pair = net[i];
+
+    //         image.line(pair.x1 * 10 + 250, pair.y1 * 10 + 250, pair.x2 * 10 + 250, pair.y2 * 10 + 250, rgb::random());
+    //     }
+
+    //     return image;
+    // }
 
 };
 

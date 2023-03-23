@@ -107,9 +107,7 @@ lm::cuda::malloc(size_t size)
 {
     void* ptr = nullptr;
 
-    error e = cudaMalloc((void**)&ptr, size);
-    if (e)
-        log::error("cudaMemcpy failed:", e.describe());
+    cudaMalloc((void**)&ptr, size);
 
     return ptr;
 }
@@ -117,25 +115,19 @@ lm::cuda::malloc(size_t size)
 void
 lm::cuda::free(void* ptr)
 {
-    error e = cudaFree(ptr);
-    if (e)
-        log::error("cudaMemcpy failed:", e.describe());
+    cudaFree(ptr);
 }
 
 void
-lm::cuda::memcpy(void* dst, void* src, size_t size, memcpy_kind kind)
+lm::cuda::memcpy(void* dst, const void* src, size_t size, memcpy_kind kind)
 {
-    error e = cudaMemcpy(dst, src, size, cudaMemcpyKind(kind + cudaMemcpyHostToHost));
-    if (e)
-        log::error("cudaMemcpy failed:", e.describe());
+    cudaMemcpy(dst, src, size, cudaMemcpyKind(kind + cudaMemcpyHostToHost));
 }
 
 void
-lm::cuda::memcpy_async(void* dst, void* src, size_t size, memcpy_kind kind, const stream& stream)
+lm::cuda::memcpy_async(void* dst, const void* src, size_t size, memcpy_kind kind, const stream& stream)
 {
-    error e = cudaMemcpyAsync(dst, src, size, cudaMemcpyKind(kind + cudaMemcpyHostToHost), stream);
-    if (e)
-        log::error("cudaMemcpy failed:", e.describe());
+    cudaMemcpyAsync(dst, src, size, cudaMemcpyKind(kind + cudaMemcpyHostToHost), stream);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
