@@ -107,22 +107,7 @@ struct rgb
         };
         return color;
     }
-
-    rgb
-    operator + (const rgb& other) const {
-        rgb color = *this;
-        color += other;
-        return color;
-    }
-
-    rgb
-    operator += (const rgb& other) {
-        r = clamp<0, 255>(r + other.r);
-        g = clamp<0, 255>(g + other.g);
-        b = clamp<0, 255>(b + other.b);
-        return *this;
-    }
-
+    
 };
 
 const rgb white = { 255, 255, 255 };
@@ -136,7 +121,7 @@ const rgb magenta = { 255, 0, 255 };
 
 // RGBA 32bit color structure /////////////////////////////////////////////
 
-struct rgba : public rgb
+struct rgba : rgb
 {
 
     // Adding alpha component to rgb

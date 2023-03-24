@@ -24,7 +24,13 @@
 
 #pragma once
 
-#include "lumina.hpp"
+#include "base/matrix.hpp"
+#include "base/array.hpp"
+
+#include "cuda/matrix.cuh"
+#include "cuda/array.cuh"
+
+#include "base/blas.hpp"
 
 namespace lm {
 namespace neural {
@@ -37,35 +43,46 @@ public:
     network(Args... args)
     {
         unsigned sizes[sizeof...(Args)] = {args...};
-        _weights.resize(sizeof...(Args))
+
+        _layers.resize(sizeof...(Args));
+        _weights.resize(sizeof...(Args));
 
         for (unsigned i = 0; i < sizeof...(Args) - 1; ++i)
         {
+            _layers[i].resize(sizes[i+1]);
             _weights[i].resize(sizes[i+1], sizes[i]);
         }
     }
 
-    const array<float>&
-    forward(const array<float>& in) const
+    const cuda::array<float>&
+    forward(const cuda::array<float>& in)
     {
-        cuda::array<float> din, dout;
-        din << in;
+        blas::mv(_weights[0], in, _layers[0]);
 
-        for (int i = 0; i < _weights.size(); ++i)
+        for (int i = 1; i < _weights.size(); ++i)
         {
-            blas::mv(_weights[i], din, dout);
-            din.swap(dout);
+            blas::mv(_weights[i], _layers[i-1], _layers[i]);
         }
 
-        array<float> out;
-        dout >> out;
-
-        return out;
+        return _layers.back();
     }
 
+    float
+    train(const cuda::array<float>& in, const cuda::array<float>& out)
+    {
+        forward(in);
+
+        blas::axpy(-1.f, out, _layers.back());
+
+        float error;
+        blas::nrm2(_layers.back(), error);
+    
+        return error;
+    }
 
 protected:
 
+    array<cuda::array<float>> _layers;
     array<cuda::matrix<float>> _weights;
 };
 

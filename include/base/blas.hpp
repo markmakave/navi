@@ -32,7 +32,31 @@
 namespace lm {
 namespace blas {
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+// L1
+
+template <typename T>
+void
+amax(
+    const cuda::array<T>& x,
+          T&              max,
+    const cuda::stream&   stream = cuda::stream::main
+);
+
+template <typename T>
+void
+amin(
+    const cuda::array<T>& x, 
+          T&              min,
+    const cuda::stream&   stream = cuda::stream::main
+);
+
+template <typename T>
+void
+asum(
+    const cuda::array<T>& x,
+          T&              sum,
+    const cuda::stream&   stream = cuda::stream::main
+);
 
 template <typename T>
 void
@@ -43,18 +67,56 @@ axpy(
     const cuda::stream&   stream = cuda::stream::main
 );
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+template <typename T>
+void
+copy(
+    const cuda::array<T>& x,
+          cuda::array<T>& y,
+    const cuda::stream&   stream = cuda::stream::main
+);
+
+template <typename T>
+void
+dot(
+    const cuda::array<T>& x,
+    const cuda::array<T>& y,
+          T&              res,
+    const cuda::stream&   stream = cuda::stream::main
+);
+
+template <typename T>
+void
+nrm2(
+    const cuda::array<T>& x,
+          T&              nrm,
+    const cuda::stream&   stream = cuda::stream::main
+);
+
+// rot
+// rotg
+// rotm
+// rotmg
+// scal
+
+template <typename T>
+void
+swap(
+    cuda::array<T>& x,
+    cuda::array<T>& y
+);
+
+// L2
 
 template <typename T>
 void
 mv(
-    const cuda::matrix<T>& A, 
-    const cuda::array<T>&  x, 
-          cuda::array<T>&  y, 
+    const cuda::matrix<T>& A,
+    const cuda::array<T>&  x,
+          cuda::array<T>&  y,
     const cuda::stream&    stream = cuda::stream::main
 );
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+// L3
 
 template <typename T>
 void
@@ -64,8 +126,6 @@ mm(
           cuda::matrix<T>& C,
     const cuda::stream&    stream = cuda::stream::main
 );
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }
 }

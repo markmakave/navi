@@ -52,8 +52,6 @@ private:
 
 class stream
 {
-    friend class kernel;
-
 public:
 
     static const stream main;
@@ -89,30 +87,29 @@ private:
     cudaStream_t _handle;
 };
 
+template <typename... Args>
 class kernel
 {
 public:
 
-    template <typename T>
     __host__
-    kernel(T* ptr)
-    :   _ptr(reinterpret_cast<void*>(ptr))
+    kernel(void(*f)(Args...))
+    :   _ptr(f)
     {}
 
-    template <typename... Args>
     __host__
     void
-    operator () (dim3 blocks, dim3 threads, const stream& stream, Args&&... args) const
+    operator () (dim3 blocks, dim3 threads, const stream& stream, const Args&... args) const
     {
-        void* arg_ptrs[sizeof...(Args)] = {&args...};
-        cudaError_t status = cudaLaunchKernel(_ptr, blocks, threads, arg_ptrs, 0, stream._handle);
+        const void* arg_ptrs[sizeof...(Args)] = {&args...};
+        cudaError_t status = cudaLaunchKernel((void*)_ptr, blocks, threads, (void**)arg_ptrs, 0, stream);
         if (status != cudaSuccess)
             lm::log::error("cudaLaunchKernel failed:", cudaGetErrorString(status));
     }
 
 private:
 
-    void* _ptr;
+    void(*_ptr)(Args...);
 };
 
 void*

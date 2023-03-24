@@ -74,6 +74,47 @@ public:
     {}
 
     __host__ __device__
+    array&
+    operator = (const array& a)
+    {
+        if (&a != this)
+        {
+            resize(a._size);
+            _alloc::copy(_data, a._data, a._size);
+        }
+
+        return *this;
+    }
+
+    __host__ __device__
+    array&
+    operator = (array&& a)
+    {
+        if (&a != this)
+        {
+            _data = a._data;
+            _size = a._size;
+
+            a._data = nullptr;
+            a._size = 0;
+        }
+
+        return *this;
+    }
+
+    __host__ __device__
+    void
+    resize(size_type size)
+    {
+        if (size != _size)
+        {
+            _deallocate();
+            _size = size;
+            _allocate();
+        }
+    }
+
+    __host__ __device__
     size_type
     size() const
     {
@@ -119,20 +160,6 @@ public:
             a.resize(_size);
 
         memcpy(a.data(), _data, _size * sizeof(value_type), H2D);
-    }
-
-    __host__ __device__
-    void
-    swap(array& a)
-    {
-        pointer temp_data = a._data;
-        size_type temp_size = a._size;
-
-        a._data = _data;
-        a._size = _size;
-
-        _data = temp_data;
-        _size = temp_size;
     }
 
 private:

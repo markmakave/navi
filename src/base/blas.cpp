@@ -84,7 +84,7 @@ lm::blas::mv(
 
     cublasStatus_t status = cublasSgemv(
         handle,
-        CUBLAS_OP_N,
+        CUBLAS_OP_T,
         A.height(),
         A.width(),
         &alpha,
@@ -119,7 +119,7 @@ lm::blas::mv(
 
     cublasStatus_t status = cublasDgemv(
         handle,
-        CUBLAS_OP_N,
+        CUBLAS_OP_T,
         A.height(),
         A.width(),
         &alpha,

@@ -32,48 +32,6 @@ namespace lm {
 namespace cuda {
 
 template <typename T>
-class allocator
-{
-public:
-
-    typedef T                   value_type;
-    typedef value_type*         pointer;
-    typedef const value_type*   const_pointer;
-    typedef value_type&         reference;
-    typedef const value_type&   const_reference;
-    typedef unsigned            size_type;
-
-public:
-
-    __host__ __device__
-    static
-    pointer
-    allocate(size_type);
-
-    __host__ __device__
-    static
-    void
-    deallocate(pointer);
-
-    __host__ __device__
-    static
-    const_reference
-    access(const_pointer p, size_type index)
-    {
-        return p[index];
-    }
-
-    __host__ __device__
-    static
-    reference
-    access(pointer p, size_type index)
-    {
-        return p[index];
-    }
-
-};
-
-template <typename T>
 class proxy
 {
 public:
@@ -119,7 +77,7 @@ private:
 };
 
 template <typename T>
-class device_allocator : public allocator<T>
+class device_allocator
 {
 public:
 
@@ -162,6 +120,18 @@ public:
 
     __host__ __device__
     static
+    const auto
+    access(const_pointer p)
+    {
+        #ifdef __CUDA_ARCH__
+        return *p;
+        #else
+        return proxy<value_type>(p);
+        #endif
+    }
+
+    __host__ __device__
+    static
     auto
     access(pointer p)
     {
@@ -172,10 +142,23 @@ public:
         #endif
     }
 
+    __host__ __device__
+    static
+    void
+    copy(const_pointer src, pointer dst, size_type size)
+    {
+        #ifdef __CUDA_ARCH__
+        for (size_type i = 0; i < size; ++i)
+            dst[i] = src[i];
+        #else
+        cuda::memcpy(dst, src, size * sizeof(value_type), D2D);
+        #endif
+    }
+
 };
 
 template <typename T>
-class pinned_allocator : public allocator<T>
+class pinned_allocator
 {
 public:
 
@@ -208,10 +191,26 @@ public:
         cudaFree(ptr);
     }
 
+    __host__
+    static
+    const_reference
+    access(const_pointer p)
+    {
+        return *p;
+    }
+
+    __host__
+    static
+    reference
+    access(pointer p)
+    {
+        return *p;
+    }
+
 };
 
 template <typename T>
-class managed_allocator : public allocator<T>
+class managed_allocator
 {
 public:
 
@@ -242,6 +241,22 @@ public:
     deallocate(pointer ptr)
     {
         cudaFree(ptr);
+    }
+
+    __host__ __device__
+    static
+    const_reference
+    access(const_pointer p)
+    {
+        return *p;
+    }
+
+    __host__ __device__
+    static
+    reference
+    access(pointer p)
+    {
+        return *p;
     }
 
 };

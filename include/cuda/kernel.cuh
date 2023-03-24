@@ -28,6 +28,7 @@
 
 #include "cuda/matrix.cuh"
 #include "cuda/brief.cuh"
+#include "cuda/color.cuh"
 
 namespace lm {
 namespace cuda {
@@ -46,6 +47,16 @@ descript(
     const matrix<bool>                   features,
     const brief<256>                     engine,
           matrix<brief<256>::descriptor> descriptors
+);
+
+__global__
+void
+distort(
+    const matrix<rgb> in,
+    const double       k1,
+    const double       k2, 
+    const double       k3,
+          matrix<rgb> out
 );
 
 }

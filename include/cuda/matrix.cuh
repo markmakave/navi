@@ -224,20 +224,6 @@ public:
     }
 
     __host__ __device__
-    const_reference
-    at(size_type y, size_type x) const
-    {
-        if (y >= _height or x >= _width)
-        {
-            static value_type value;
-            value = value_type();
-            return value;
-        }
-
-        return _alloc::access(_data + y * _width + x);
-    }
-
-    __host__ __device__
     size_type 
     size() const
     {

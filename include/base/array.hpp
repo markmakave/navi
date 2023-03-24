@@ -344,7 +344,7 @@ public:
         _allocate(size);
         pointer new_data = _data;
 
-        for (size_t i = 0; i < _size; ++i)
+        for (size_type i = 0; i < _size; ++i)
             new_data[i] = old_data[i];
 
         _data = old_data;
