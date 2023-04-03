@@ -166,13 +166,11 @@ ger(
           T          alpha,
           matrix<T>& A
 ) {
-    assert(x.size() == A.width() && y.size() == A.height());
+    assert(x.size() == A.height() && y.size() == A.width());
 
-    for (size_type i = 0; i < A.height(); ++i)
-    {
-        for (size_type j = 0; j < A.width(); ++j)
-        {
-            A[i][j] += alpha * x[j] * y[i];
+    for (size_type i = 0; i < x.size(); ++i) {
+        for (size_type j = 0; j < y.size(); ++j) {
+            A[i][j] += alpha * x[i] * y[j];
         }
     }
 }

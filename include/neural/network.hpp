@@ -40,7 +40,7 @@ auto activation = [](float x) {
 };
 
 auto activation_derivative(float x) {
-    float tanh2 = activation(2);
+    float tanh2 = activation(x);
     tanh2 *= tanh2;
     return 1 - tanh2;
 };
@@ -82,6 +82,8 @@ public:
     forward(const array<float>& in)
     {
         blas::mv(_weights[0], in, _layers[0]);
+        blas::add(_biases[0], _layers[0], _layers[0]);
+        blas::map(_layers[0], activation, _layers[0]);
 
         for (int i = 1; i < _weights.size(); ++i)
         {
@@ -98,7 +100,6 @@ public:
     {
         array<T> error = forward(in);
         blas::sub(error, target, error);
-        log::info("Norm:", blas::nrm2(error));
 
         // обратное распространение ошибки
         for (int i = _layers.size() - 1; i >= 0; i--)
@@ -114,12 +115,11 @@ public:
             blas::mul(output_gradient, error, output_gradient);
 
             // вычисляем градиент функции потерь по входу
-            //array<T> input_gradient = matrix<T>::dot(weights.transpose(), output_gradient);
             array<T> input_gradient;
             blas::mv(weights, output_gradient, input_gradient, true);
 
             // обновляем веса и смещения
-            blas::ger(input, output_gradient, -learning_rate, weights);
+            blas::ger(output_gradient, input, -learning_rate, weights);
             blas::sub(biases, output_gradient, biases);
 
             // переходим к следующему слою
