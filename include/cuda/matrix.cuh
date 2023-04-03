@@ -187,38 +187,30 @@ public:
         return _data + index * _width;
     }
 
-    __host__ __device__
-    auto 
+    __device__
+    pointer
     operator [] (size_type index)
     {
-        #ifdef __CUDA_ARCH__
         return _data + index * _width;
-        #else
-        return _alloc::access(_data + index * _width);
-        #endif
     }
 
-    __host__ __device__
-    auto 
+    __device__
+    const_pointer
     operator [] (size_type index) const 
     {
-        #ifdef __CUDA_ARCH__
         return _data + index * _width;
-        #else
-        return _alloc::access(_data + index * _width);
-        #endif
     }
 
     __host__ __device__
-    auto
-    operator () (size_type y, size_type x)
+    decltype(auto)
+    operator () (size_type y, size_type x) const
     {
         return _alloc::access(_data + y * _width + x);
     }
 
     __host__ __device__
-    auto
-    operator () (size_type y, size_type x) const
+    decltype(auto)
+    operator () (size_type y, size_type x)
     {
         return _alloc::access(_data + y * _width + x);
     }

@@ -68,7 +68,7 @@ struct rgba : rgb
     __host__ __device__
     rgba()
     :   rgb(),
-        a(255)
+        a(0)
     {}
 
     __host__ __device__
@@ -84,9 +84,21 @@ struct rgba : rgb
     {}
 
     __host__ __device__
+    rgba(const lm::rgba& c)
+    :   rgb(c.r, c.g, c.b),
+        a(c.a)
+    {}
+
+    __host__ __device__
     operator gray () const
     {
         return clamp<0, 255>(0.2161 * r + 0.7152 * g + 0.0722 * b);
+    }
+
+    __host__
+    operator lm::rgba() const
+    {
+        return {r, g, b, a};
     }
 };
 

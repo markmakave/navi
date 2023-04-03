@@ -52,9 +52,9 @@ const lm::cuda::stream lm::cuda::stream::main{0};
 
 lm::cuda::stream::stream()
 {
-    cudaError_t status = cudaStreamCreate(&_handle);
-    if (status != cudaSuccess)
-        lm::log::error("cudaStreamCreate failed:", cudaGetErrorString(status));
+    error status = cudaStreamCreate(&_handle);
+    if (status)
+        log::error("cudaStreamCreate failed:", status.describe());
 }
 
 lm::cuda::stream::~stream()
@@ -62,9 +62,9 @@ lm::cuda::stream::~stream()
     if (*this == main)
         return;
 
-    cudaError_t status = cudaStreamDestroy(_handle);
-    if (status != cudaSuccess)
-        lm::log::error("cudaStreamDestroy failed:", cudaGetErrorString(status));
+    error status = cudaStreamDestroy(_handle);
+    if (status)
+        log::error("cudaStreamDestroy failed:", status.describe());
 }
 
 bool
@@ -87,9 +87,9 @@ lm::cuda::stream::operator cudaStream_t() const
 void
 lm::cuda::stream::synchronize() const
 {
-    cudaError_t status = cudaStreamSynchronize(_handle);
-    if (status != cudaSuccess)
-        lm::log::error("cudaStreamSynchronize failed:", cudaGetErrorString(status));
+    error status = cudaStreamSynchronize(_handle);
+    if (status)
+        log::error("cudaStreamSynchronize failed:", status.describe());
 }
 
 lm::cuda::stream::stream(cudaStream_t handle)
@@ -107,7 +107,9 @@ lm::cuda::malloc(size_t size)
 {
     void* ptr = nullptr;
 
-    cudaMalloc((void**)&ptr, size);
+    error status = cudaMalloc((void**)&ptr, size);
+    if (status)
+        log::error("cudaMalloc failed:", status.describe());
 
     return ptr;
 }
@@ -121,13 +123,17 @@ lm::cuda::free(void* ptr)
 void
 lm::cuda::memcpy(void* dst, const void* src, size_t size, memcpy_kind kind)
 {
-    cudaMemcpy(dst, src, size, cudaMemcpyKind(kind + cudaMemcpyHostToHost));
+    error status = cudaMemcpy(dst, src, size, cudaMemcpyKind(kind + cudaMemcpyHostToHost));
+    if (status)
+        log::error("cudaMemcpy failed:", status.describe());
 }
 
 void
 lm::cuda::memcpy_async(void* dst, const void* src, size_t size, memcpy_kind kind, const stream& stream)
 {
-    cudaMemcpyAsync(dst, src, size, cudaMemcpyKind(kind + cudaMemcpyHostToHost), stream);
+    error status = cudaMemcpyAsync(dst, src, size, cudaMemcpyKind(kind + cudaMemcpyHostToHost), stream);
+    if (status)
+        log::error("cudaMemcpyAsync failed:", status.describe());
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

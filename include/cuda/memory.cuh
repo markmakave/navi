@@ -98,9 +98,9 @@ public:
         void* ptr;
 
         #ifdef __CUDA_ARCH__
-        ptr = operator new[](size * sizeof(T));
+        ptr = operator new[](size * sizeof(value_type));
         #else
-        ptr = cuda::malloc(size * sizeof(T));
+        ptr = cuda::malloc(size * sizeof(value_type));
         #endif
 
         return reinterpret_cast<pointer>(ptr);
@@ -120,7 +120,7 @@ public:
 
     __host__ __device__
     static
-    const auto
+    decltype(auto)
     access(const_pointer p)
     {
         #ifdef __CUDA_ARCH__
@@ -132,7 +132,7 @@ public:
 
     __host__ __device__
     static
-    auto
+    decltype(auto)
     access(pointer p)
     {
         #ifdef __CUDA_ARCH__
@@ -230,7 +230,7 @@ public:
     {
         void* ptr;
         
-        cudaMallocManaged((void**)&ptr, size * sizeof(T));
+        cudaMallocManaged((void**)&ptr, size * sizeof(value_type));
 
         return reinterpret_cast<pointer>(ptr);
     }

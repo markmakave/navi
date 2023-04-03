@@ -64,7 +64,7 @@ public:
     :   _size(a._size)
     {
         _allocate();
-        _alloc::memcpy(_data, a._data, a._size);
+        _alloc::copy(_data, a._data, a._size);
     }
 
     __host__ __device__
@@ -92,6 +92,8 @@ public:
     {
         if (&a != this)
         {
+            _deallocate();
+
             _data = a._data;
             _size = a._size;
 
@@ -136,7 +138,14 @@ public:
     }
 
     __host__ __device__
-    auto
+    decltype(auto)
+    operator [] (size_type index) const
+    {
+        return _alloc::access(_data + index);
+    }
+
+    __host__ __device__
+    decltype(auto)
     operator [] (size_type index)
     {
         return _alloc::access(_data + index);

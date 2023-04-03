@@ -1,3 +1,27 @@
+/* 
+
+    Copyright (c) 2023 Mark Mokhov
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+*/
+
 #include <cuda_runtime.h>
 
 #include "cuda/matrix.cuh"
@@ -9,34 +33,43 @@ namespace cuda {
 static
 __device__
 bool
-fast11(const lm::gray *p, int origin, int t);
+fast11(const gray *p, int origin, int t);
+
+__managed__ unsigned nfeatures = 0;
 
 __global__
 void
 detect(
-    const lm::cuda::matrix<lm::gray> input, 
-          lm::cuda::matrix<bool>     output
+    const cuda::matrix<gray> image,
+    const int                threshold,
+          unsigned*          nfeatures,
+          cuda::matrix<bool> features
 ) {
-    unsigned x = blockIdx.x * blockDim.x + threadIdx.x;
-    unsigned y = blockIdx.y * blockDim.y + threadIdx.y;
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (x >= input.width() - 3 || y >= input.height() - 3 || x < 3 || y < 3)
+    if (x >= image.width() - 3 || y >= image.height() - 3 || x < 3 || y < 3)
         return;
 
-    lm::gray circle[16] = {
-        input[y - 3][x], input[y - 3][x + 1], input[y - 2][x + 2], input[y - 1][x + 3],
-        input[y][x + 3], input[y + 1][x + 3], input[y + 2][x + 2], input[y + 3][x + 1],
-        input[y + 3][x], input[y + 3][x - 1], input[y + 2][x - 2], input[y + 1][x - 3],
-        input[y][x - 3], input[y - 1][x - 3], input[y - 2][x - 2], input[y - 3][x - 1]
+    gray circle[16] = {
+        image[y - 3][x], image[y - 3][x + 1], image[y - 2][x + 2], image[y - 1][x + 3],
+        image[y][x + 3], image[y + 1][x + 3], image[y + 2][x + 2], image[y + 3][x + 1],
+        image[y + 3][x], image[y + 3][x - 1], image[y + 2][x - 2], image[y + 1][x - 3],
+        image[y][x - 3], image[y - 1][x - 3], image[y - 2][x - 2], image[y - 3][x - 1]
     };
 
-    output[y][x] = fast11(circle, input[y][x], 30);
+    // features[y][x] = fast11(circle, image[y][x], threshold);
+    if (fast11(circle, image[y][x], threshold))
+    {
+        features[y][x] = true;
+        atomicInc(nfeatures, 1);
+    }
 }
 
 static
 __device__
 bool
-fast11(const lm::gray *p, int origin, int t)
+fast11(const gray *p, int origin, int t)
 {
     int bright = origin + t;
     int dark = origin - t;

@@ -61,7 +61,7 @@ public:
         static std::mt19937 gen(rd());
         static std::binomial_distribution<int> dist(50, 0.5);
 
-        cuda::managed_allocator<point_pair>::allocate(N);
+        net = cuda::managed_allocator<point_pair>::allocate(N);
 
         for (int i = 0; i < 256; ++i)
         {

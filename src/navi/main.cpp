@@ -3,41 +3,84 @@
 
 #include "lumina.hpp"
 #include "util/timer.hpp"
+#include "util/profiler.hpp"
 
-#include "neural/network.hpp"
+using namespace lm;
 
-#define ITERATIONS 300
-#define RADIUS 2
-#define GPU
-
-#define LM_FRAMEWORK_VERSION(v) using namespace lm
-
-LM_FRAMEWORK_VERSION(1.0);
+#define DATASET "Staircase"
 
 int main()
 {
-    image<rgb> m1("../dataset/photo.png");
-    image<cuda::rgb> m2;
+    image<rgb>
+        l_frame("../dataset/stereo/" DATASET "/im0.png"),
+        r_frame("../dataset/stereo/" DATASET "/im1.png");
 
-    cuda::matrix<cuda::rgb> dm1, dm2;
-    dm2.resize(m1.height(), m1.width());
+    cuda::matrix<gray>
+        dl_frame,
+        dr_frame;
 
-    dm1 << m1;
+    dl_frame << l_frame;
+    dr_frame << r_frame;
 
-    cuda::kernel distort(cuda::distort);
+    cuda::stream
+        l_stream,
+        r_stream;
+
+    // DETECT
+    cuda::kernel detect(cuda::detect);
+
+    unsigned
+        *l_nfeatures = cuda::managed_allocator<unsigned>::allocate(1),
+        *r_nfeatures = cuda::managed_allocator<unsigned>::allocate(1);
+    
+    *l_nfeatures = 0;
+    *r_nfeatures = 0;
+
+    cuda::matrix<bool>
+        dl_features(dl_frame.height(), dl_frame.width()),
+        dr_features(dr_frame.height(), dr_frame.width());
+    
+    // DESCRIPT
+    cuda::kernel descript(cuda::descript);
+    cuda::brief<256> engine;
+    cuda::matrix<cuda::brief<256>::descriptor>
+        dl_descriptors(dl_frame.height(), dl_frame.width()),
+        dr_descriptors(dr_frame.height(), dr_frame.width());
+
+    // MATCH
 
     {
-        timer _("compute", ITERATIONS);
+        detect({dl_frame.width() / 8 + 1, dl_frame.height() / 8 + 1}, {8, 8}, l_stream, dl_frame, 30, l_nfeatures, dl_features);
+        // detect({dr_frame.width() / 8 + 1, dr_frame.height() / 8 + 1}, {8, 8}, r_stream, dr_frame, 30, dr_features);
 
-        for (int i = 0; i < ITERATIONS; ++i)
+        l_stream.synchronize();
+        // r_stream.synchronize();
+    }
+
+    std::cout << *l_nfeatures << std::endl;
+
+    matrix<bool> l_features;
+    dl_features >> l_features;
+
+    for (int y = 0; y < l_features.height(); ++y)
+    {
+        for (int x = 0; x < l_features.width(); ++x)
         {
-            double k = (double(i) / ITERATIONS * 2 - 1) * 10;
-            distort(dim3{unsigned(m1.width()) / 8 + 1, unsigned(m1.height()) / 8 + 1}, dim3{8, 8}, cuda::stream::main, dm1, k, 0.0, 0.0, dm2);
-            cuda::stream::main.synchronize();
-            dm2 >> m2;
-            image<rgb>(m2).write(("result/distortion" + std::to_string(i) + ".png").c_str());
+            if (l_features[y][x])
+                l_frame.circle(x, y, 2, rgb::random());
         }
     }
+
+    l_frame.write("out.qoi");
+
+    // {
+    //     descript({dl_frame.width() / 8 + 1, dl_frame.height() / 8 + 1}, {8, 8}, l_stream, dl_frame, dl_features, engine, dl_descriptors);
+    //     descript({dr_frame.width() / 8 + 1, dr_frame.height() / 8 + 1}, {8, 8}, r_stream, dr_frame, dr_features, engine, dr_descriptors);
+
+    //     l_stream.synchronize();
+    //     r_stream.synchronize();
+    // }
+
 
 
 }

@@ -25,6 +25,8 @@
 #pragma once
 
 #include <cuda_runtime.h>
+#include <cuda_fp16.h>
+#include <cuda_fp16.hpp>
 
 #include "cuda/matrix.cuh"
 #include "cuda/brief.cuh"
@@ -36,8 +38,10 @@ namespace cuda {
 __global__
 void
 detect(
-    const matrix<lm::gray> input, 
-          matrix<bool> output
+    const matrix<lm::gray> image, 
+    const int              threshold,
+          unsigned*        nfeatures,
+          matrix<bool>     features
 );
 
 __global__
@@ -49,14 +53,15 @@ descript(
           matrix<brief<256>::descriptor> descriptors
 );
 
+template <typename T>
 __global__
 void
 distort(
-    const matrix<rgb> in,
-    const double       k1,
-    const double       k2, 
-    const double       k3,
-          matrix<rgb> out
+    const matrix<T> in,
+    const __half    k1,
+    const __half    k2, 
+    const __half    k3,
+          matrix<T> out
 );
 
 }

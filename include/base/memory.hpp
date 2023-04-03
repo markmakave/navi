@@ -25,6 +25,7 @@
 #pragma once
 
 #include <alloca.h>
+#include "util/log.hpp"
 
 namespace lm {
 
@@ -33,20 +34,38 @@ class heap_allocator
 {
 public:
 
+    typedef T                 value_type;
+    typedef value_type*       pointer;
+    typedef const value_type* const_pointer;
+    typedef int64_t           size_type;
+
+
+public:
+
     static
-    T*
+    pointer
     allocate(size_t size)
     {
         void* ptr = operator new[](size * sizeof(T));
+        if (ptr == nullptr)
+            log::error("memory allocation error");
 
-        return reinterpret_cast<T*>(ptr);
+        return reinterpret_cast<pointer>(ptr);
     }
 
     static
     void
-    deallocate(T* ptr)
+    deallocate(pointer ptr)
     {
         operator delete[](ptr);
+    }
+
+    static
+    void
+    copy(const_pointer src, pointer dst, size_type size)
+    {
+        for (size_type i = 0; i < size; ++i)
+            dst[i] = src[i];
     }
 
 };

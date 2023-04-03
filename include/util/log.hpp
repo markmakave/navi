@@ -60,6 +60,7 @@ public:
         cfg.stream << cfg.color;
         console(cfg, cfg.label, date(), args...);
         cfg.stream << clear;
+        std::flush(cfg.stream);
     }
 
     template <typename ...Args>
