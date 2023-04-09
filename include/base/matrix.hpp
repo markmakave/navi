@@ -24,14 +24,11 @@
 
 #pragma once
 
+#include "base/tensor.hpp"
 #include "base/memory.hpp"
-
-#include <cstdint>
 
 namespace lm {
 
-/// @brief Matrix class with basic operations and STL-like interface
-/// @tparam T Type of the elements in the matrix (int, float, double, etc.)
 template <typename T, typename _alloc = heap_allocator<T>>
 struct matrix
 {
@@ -299,7 +296,6 @@ protected:
 
     pointer _data;
     size_type _height, _width;
-
 };
 
 } // namespace lm

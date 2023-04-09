@@ -26,6 +26,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <ctime>
 
 namespace lm {
 
@@ -133,5 +134,15 @@ private:
     #undef clear
 
 };
+
+#define INFO(...)    lm::log::info(__VA_ARGS__)
+#define WARNING(...) lm::log::warning(__VA_ARGS__)
+#define ERROR(...)   lm::log::error(__VA_ARGS__)
+
+#ifndef NDEBUG
+#define DEBUG(...)   lm::log::debug(__VA_ARGS__)
+#else
+#define DEBUG(...) {}
+#endif
 
 }

@@ -35,20 +35,25 @@
 namespace lm {
 namespace neural {
 
-auto activation = [](float x) {
+template <typename T>
+T
+activation(T x) {
     return std::tanh(x);
 };
 
-auto activation_derivative(float x) {
-    float tanh2 = activation(x);
+template <typename T>
+T
+activation_derivative(T x) {
+    T tanh2 = activation(x);
     tanh2 *= tanh2;
     return 1 - tanh2;
 };
 
-auto random_float(float) {
+template <typename T>
+T random(T) {
     static std::random_device rd;
     static std::mt19937 engine(rd());
-    static std::uniform_real_distribution<float> dis;
+    static std::normal_distribution<T> dis(0, 0.1);
     return dis(engine);
 }
 
@@ -60,7 +65,7 @@ public:
     template <typename... Args>
     network(Args... args)
     {
-        unsigned sizes[sizeof...(Args)] = {args...};
+        int sizes[sizeof...(Args)] = {args...};
 
         _layers.resize(sizeof...(Args) - 1);
         _weights.resize(_layers.size());
@@ -71,25 +76,25 @@ public:
             _layers[i].resize(sizes[i+1]);
             
             _weights[i].resize(sizes[i+1], sizes[i]);
-            blas::map(_weights[i], random_float, _weights[i]);
+            blas::map(_weights[i], random<T>, _weights[i]);
 
             _biases[i].resize(_layers[i].size());
-            blas::map(_biases[i], random_float, _biases[i]);
+            blas::map(_biases[i], random<T>, _biases[i]);
         }
     }
 
-    const array<float>&
-    forward(const array<float>& in)
+    const array<T>&
+    forward(const array<T>& in)
     {
         blas::mv(_weights[0], in, _layers[0]);
         blas::add(_biases[0], _layers[0], _layers[0]);
-        blas::map(_layers[0], activation, _layers[0]);
+        blas::map(_layers[0], activation<T>, _layers[0]);
 
         for (int i = 1; i < _weights.size(); ++i)
         {
             blas::mv(_weights[i], _layers[i-1], _layers[i]);
             blas::add(_biases[i], _layers[i], _layers[i]);
-            blas::map(_layers[i], activation, _layers[i]);
+            blas::map(_layers[i], activation<T>, _layers[i]);
         }
 
         return _layers[_layers.size() - 1];
@@ -111,7 +116,7 @@ public:
 
             // вычисляем градиент функции потерь по выходу
             array<T> output_gradient;
-            blas::map(output, activation_derivative, output_gradient);
+            blas::map(output, activation_derivative<T>, output_gradient);
             blas::mul(output_gradient, error, output_gradient);
 
             // вычисляем градиент функции потерь по входу

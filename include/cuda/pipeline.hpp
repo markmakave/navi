@@ -11,7 +11,12 @@ public:
 
     class stage
     {
+    public:
 
+
+    private:
+
+        void(*_functor)();
     };
 
 public:

@@ -134,6 +134,7 @@ mv(
         if (y.size() != A.width())
             y.resize(A.width());
 
+        #pragma omp parallel for
         for (int j = 0; j < A.width(); j++) {
             T sum = 0;
             for (int i = 0; i < A.height(); i++) {
@@ -148,6 +149,7 @@ mv(
         if (y.size() != A.height())
             y.resize(A.height());
         
+        #pragma omp parallel for
         for (int i = 0; i < A.height(); i++) {
             T sum = 0;
             for (int j = 0; j < A.width(); j++) {
@@ -168,6 +170,7 @@ ger(
 ) {
     assert(x.size() == A.height() && y.size() == A.width());
 
+    #pragma omp parallel for
     for (size_type i = 0; i < x.size(); ++i) {
         for (size_type j = 0; j < y.size(); ++j) {
             A[i][j] += alpha * x[i] * y[j];
@@ -201,6 +204,7 @@ binary_op(
           F         functor,
           T*        z
 ) {
+    #pragma omp parallel for
     for (size_type i = 0; i < size; ++i)
         z[i] = functor(x[i], y[i]);
 }
@@ -217,6 +221,7 @@ map(
     if (y.size() != x.size())
         y.resize(x.size());
 
+    #pragma omp parallel for
     for (size_type i = 0; i < x.size(); ++i)
         y[i] = functor(x[i]);
 }

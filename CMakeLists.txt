@@ -5,7 +5,7 @@ project(lumina LANGUAGES C CXX CUDA)
 find_package(PNG REQUIRED)
 find_package(CUDA REQUIRED)
 
-set(CMAKE_CXX_FLAGS "-std=c++17 -fopenmp -g -Wall -march=native")
+set(CMAKE_CXX_FLAGS "-std=c++17 -fopenmp -Ofast -Wall -Wextra")
 include_directories(
     .
     include
@@ -19,7 +19,6 @@ target_include_directories(qoi PUBLIC vendor/qoi)
 add_library(lm 
     src/base/image.cpp
     src/cuda/blas.cpp
-    src/navi/detect.cpp
     src/cuda/cuda.cpp
     src/cuda/detect.cu
     src/cuda/descript.cu
@@ -30,7 +29,7 @@ set_property(TARGET lm PROPERTY CUDA_ARCHITECTURES native)
 
 add_executable(navi src/navi/main.cpp)
 target_link_libraries(navi qoi ${PNG_LIBRARIES} pthread cuda lm)
-target_precompile_headers(navi PUBLIC include/lumina.hpp)
+# target_precompile_headers(navi PUBLIC include/lumina.hpp)
 
 add_executable(neural_test test/neural/main.cpp)
 target_link_libraries(neural_test lm)
