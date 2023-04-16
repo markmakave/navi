@@ -26,6 +26,7 @@
 
 #include <alloca.h>
 #include "util/log.hpp"
+#include "base/types.hpp"
 
 namespace lm {
 
@@ -34,19 +35,20 @@ class heap_allocator
 {
 public:
 
-    typedef T                 value_type;
-    typedef value_type*       pointer;
-    typedef const value_type* const_pointer;
-    typedef int64_t           size_type;
-
+    using value_type        = T;
+    using pointer           = value_type*;
+    using const_pointer     = const value_type*;
+    using reference         = value_type&;
+    using const_reference   = const value_type&;
+    using size_type         = i64;
 
 public:
 
     static
     pointer
-    allocate(size_t size)
+    allocate(size_type size)
     {
-        void* ptr = operator new[](size * sizeof(T));
+        void* ptr = new T[size];
         if (ptr == nullptr)
             log::error("memory allocation error");
 
@@ -57,7 +59,21 @@ public:
     void
     deallocate(pointer ptr)
     {
-        operator delete[](ptr);
+        delete[] ptr;
+    }
+
+    static
+    reference
+    access(pointer ptr)
+    {
+        return *ptr;
+    }
+
+    static
+    const_reference
+    access(const_pointer ptr)
+    {
+        return *ptr;
     }
 
     static
@@ -75,20 +91,51 @@ class stack_allocator
 {
 public:
 
+    using value_type        = T;
+    using pointer           = value_type*;
+    using const_pointer     = const value_type*;
+    using reference         = value_type&;
+    using const_reference   = const value_type&;
+    using size_type         = i64;
+
+public:
+
     static
     T*
-    allocate(size_t size)
+    allocate(size_type size)
     {
         void* ptr = alloca(size * sizeof(T));
 
-        return reinterpret_cast<T*>(ptr);
+        return reinterpret_cast<pointer>(ptr);
     }
 
     static
     void
-    deallocate(T* ptr)
+    deallocate([[maybe_unused]] pointer ptr)
     {
         // nop
+    }
+
+    static
+    reference
+    access(pointer ptr)
+    {
+        return *ptr;
+    }
+
+    static
+    const_reference
+    access(const_pointer ptr)
+    {
+        return *ptr;
+    }
+
+    static
+    void
+    copy(const_pointer src, pointer dst, size_type size)
+    {
+        for (size_type i = 0; i < size; ++i)
+            dst[i] = src[i];
     }
 };
 

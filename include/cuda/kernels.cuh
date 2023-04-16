@@ -22,14 +22,27 @@
 
 */
 
+#pragma once
+
 #include <cuda_runtime.h>
+#include <cuda_fp16.h>
+#include <cuda_fp16.hpp>
 
 #include "cuda/matrix.cuh"
 #include "cuda/brief.cuh"
-#include "base/color.hpp"
+#include "cuda/color.cuh"
 
 namespace lm {
 namespace cuda {
+
+__global__
+void
+detect(
+    const matrix<lm::gray> image, 
+    const int              threshold,
+          unsigned*        nfeatures,
+          matrix<bool>     features
+);
 
 __global__
 void
@@ -38,16 +51,22 @@ descript(
     const matrix<bool>                   features,
     const brief<256>                     engine,
           matrix<brief<256>::descriptor> descriptors
-) {
-    unsigned x = threadIdx.x + blockIdx.x * blockDim.x;
-    unsigned y = threadIdx.y + blockIdx.y * blockDim.y;
+);
 
-    if (x >= image.shape()[0] - 3 || y >= image.shape()[1] - 3 || x < 3 || y < 3)
-        return;
+template <typename T>
+__global__
+void
+distort(
+    const matrix<T> in,
+    const __half    k1,
+    const __half    k2, 
+    const __half    k3,
+          matrix<T> out
+);
 
-    if (features(x, y))
-        descriptors(x, y) = engine.descript(x, y, image);
-}
+__global__
+void
+test(tensor<1, int, device_allocator<int>>);
 
 }
 }

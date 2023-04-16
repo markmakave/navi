@@ -34,14 +34,13 @@ lm::image<lm::gray>::encode<lm::image<lm::gray>::format::png>() const
 {
     array<byte> buffer;
 
-    png::image<png::gray_pixel> img(_width, _height);
-    for (unsigned y = 0; y < _height; ++y)
+    png::image<png::gray_pixel> img(_shape[0], _shape[1]);
+    for (unsigned y = 0; y < _shape[1]; ++y)
     {
-        auto this_row = row(y);
         auto& img_row = img.get_row(y);
 
-        for (unsigned x = 0; x < _width; ++x)
-            img_row[x] = png::gray_pixel(this_row[x]);
+        for (unsigned x = 0; x < _shape[0]; ++x)
+            img_row[x] = png::gray_pixel((*this)(x, y));
     }
 
     std::stringstream ss;
@@ -50,7 +49,7 @@ lm::image<lm::gray>::encode<lm::image<lm::gray>::format::png>() const
     size_type size = ss.tellg();
     ss.seekg(0, std::ios::beg);
 
-    buffer.resize(size);
+    buffer.reshape(size);
     ss.read((char*)buffer.data(), size);
 
     return buffer;
@@ -70,11 +69,10 @@ lm::image<lm::gray>::decode<lm::image<lm::gray>::format::png>(const lm::array<lm
 
     for (unsigned y = 0; y < img.get_height(); ++y)
     {
-        auto this_row = row(y);
         auto& img_row = img.get_row(y);
 
         for (unsigned x = 0; x < img.get_width(); ++x)
-            this_row[x] = reinterpret_cast<lm::byte&>(img_row[x]);
+            (*this)(x, y) = reinterpret_cast<lm::byte&>(img_row[x]);
     }
 }
 
@@ -87,14 +85,13 @@ lm::image<lm::rgb>::encode<lm::image<lm::rgb>::format::png>() const
 {
     array<byte> buffer;
 
-    png::image<png::rgb_pixel> img(_width, _height);
-    for (unsigned y = 0; y < _height; ++y)
+    png::image<png::rgb_pixel> img(_shape[0], _shape[1]);
+    for (unsigned y = 0; y < _shape[1]; ++y)
     {
-        auto this_row = row(y);
         auto& img_row = img.get_row(y);
 
-        for (unsigned x = 0; x < _width; ++x)
-            img_row[x] = reinterpret_cast<const png::rgb_pixel&>(this_row[x]);
+        for (unsigned x = 0; x < _shape[0]; ++x)
+            img_row[x] = reinterpret_cast<const png::rgb_pixel&>((*this)(x, y));
     }
 
     std::stringstream ss;
@@ -103,7 +100,7 @@ lm::image<lm::rgb>::encode<lm::image<lm::rgb>::format::png>() const
     size_type size = ss.tellg();
     ss.seekg(0, std::ios::beg);
 
-    buffer.resize(size);
+    buffer.reshape(size);
     ss.read((char*)buffer.data(), size);
 
     return buffer;
@@ -123,11 +120,10 @@ lm::image<lm::rgb>::decode<lm::image<lm::rgb>::format::png>(const lm::array<lm::
 
     for (unsigned y = 0; y < img.get_height(); ++y)
     {
-        auto this_row = row(y);
         auto& img_row = img.get_row(y);
 
         for (unsigned x = 0; x < img.get_width(); ++x)
-            this_row[x] = reinterpret_cast<rgb&>(img_row[x]);
+            (*this)(x, y) = reinterpret_cast<rgb&>(img_row[x]);
     }
 }
 
@@ -140,14 +136,13 @@ lm::image<lm::rgba>::encode<lm::image<lm::rgba>::format::png>() const
 {
     array<byte> buffer;
 
-    png::image<png::rgba_pixel> img(_width, _height);
-    for (unsigned y = 0; y < _height; ++y)
+    png::image<png::rgba_pixel> img(_shape[0], _shape[1]);
+    for (unsigned y = 0; y < _shape[1]; ++y)
     {
-        auto this_row = row(y);
         auto& img_row = img.get_row(y);
 
-        for (unsigned x = 0; x < _width; ++x)
-            img_row[x] = reinterpret_cast<const png::rgba_pixel&>(this_row[x]);
+        for (unsigned x = 0; x < _shape[0]; ++x)
+            img_row[x] = reinterpret_cast<const png::rgba_pixel&>((*this)(x, y));
     }
 
     std::stringstream ss;
@@ -156,7 +151,7 @@ lm::image<lm::rgba>::encode<lm::image<lm::rgba>::format::png>() const
     size_type size = ss.tellg();
     ss.seekg(0, std::ios::beg);
 
-    buffer.resize(size);
+    buffer.reshape(size);
     ss.read((char*)buffer.data(), size);
 
     return buffer;
@@ -176,11 +171,10 @@ lm::image<lm::rgba>::decode<lm::image<lm::rgba>::format::png>(const lm::array<lm
 
     for (unsigned y = 0; y < img.get_height(); ++y)
     {
-        auto this_row = row(y);
         auto& img_row = img.get_row(y);
 
         for (unsigned x = 0; x < img.get_width(); ++x)
-            this_row[x] = reinterpret_cast<rgba&>(img_row[x]);
+            (*this)(x, y) = reinterpret_cast<rgba&>(img_row[x]);
     }
 }
 
@@ -236,15 +230,19 @@ lm::array<lm::byte>
 lm::image<lm::rgb>::encode<lm::image<lm::rgb>::format::qoi>() const
 {
     qoi_desc desc;
-    desc.width = _width;
-    desc.height = _height;
+    desc.width = _shape[0];
+    desc.height = _shape[1];
     desc.channels = 3;
     desc.colorspace = QOI_LINEAR;
 
     int buffer_length;
     byte* buffer_data = reinterpret_cast<byte*>(qoi_encode(_data, &desc, &buffer_length));
 
-    return array<byte>(buffer_data, buffer_length);
+    array<byte> buffer(buffer_length);
+    for (int i = 0; i < buffer_length; ++i)
+        buffer(i) = buffer_data[i];
+
+    return buffer;
 }
 
 template <>
@@ -261,8 +259,8 @@ lm::image<lm::rgb>::decode<lm::image<lm::rgb>::format::qoi>(const lm::array<lm::
 
         _deallocate();
         _data = data;
-        _width = desc.width;
-        _height = desc.height;
+        _shape[0] = desc.width;
+        _shape[1] = desc.height;
     }
     else
     {
@@ -283,21 +281,25 @@ lm::array<lm::byte>
 lm::image<lm::rgba>::encode<lm::image<lm::rgba>::format::qoi>() const
 {
     qoi_desc desc;
-    desc.width = _width;
-    desc.height = _height;
+    desc.width = _shape[0];
+    desc.height = _shape[1];
     desc.channels = 4;
     desc.colorspace = QOI_LINEAR;
 
     int buffer_length;
     byte* buffer_data = reinterpret_cast<byte*>(qoi_encode(_data, &desc, &buffer_length));
 
-    return array<byte>(buffer_data, buffer_length);
+    array<byte> buffer(buffer_length);
+    for (int i = 0; i < buffer_length; ++i)
+        buffer(i) = buffer_data[i];
+
+    return buffer;
 }
 
 template <>
 template <>
 void
-lm::image<lm::rgba>::decode<lm::image<lm::rgba>::format::qoi>(const lm::array<lm::byte>& buffer)
+lm::image<lm::rgba>::decode<lm::image<lm::rgba>::format::qoi>([[maybe_unused]] const lm::array<lm::byte>& buffer)
 {
     
 }

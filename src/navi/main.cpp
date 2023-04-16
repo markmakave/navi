@@ -10,24 +10,17 @@
 #include "base/memory.hpp"
 
 #include "cuda/tensor.cuh"
-#include "cuda/memory.cuh"
+#include "cuda/cuda.cuh"
+#include "cuda/matrix.cuh"
 
 using namespace lm;
 
 int main()
 {
-    
-    tensor<3, float, stack_allocator<float>> t(10, 10, 3);
+    tensor<3, int, heap_allocator<int>> t(5, 5, 5);
 
-    for (int z = 0; z < t.shape()[2]; ++z)
-    {
-        for (int y = 0; y < t.shape()[1]; ++y)
-        {
-            for (int x = 0; x < t.shape()[0]; ++x)
-                std::cout << t(x, y ,z) << ' ';
-            std::cout << std::endl;
-        }
-        std::cout << std::endl;
-    }
+    for (int i = 0; i < t.size(); ++i)
+        t.data()[i] = i;
 
+    std::cout << t;
 }

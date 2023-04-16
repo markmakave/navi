@@ -1,4 +1,4 @@
-#include "cuda/kernel.cuh"
+#include "cuda/kernels.cuh"
 
 template <>
 __global__
@@ -13,13 +13,13 @@ lm::cuda::distort(
     int x = threadIdx.x + blockIdx.x * blockDim.x;
     int y = threadIdx.y + blockIdx.y * blockDim.y;
 
-    if (y >= in.height() || x >= in.width())
+    if (y >= in.shape()[1] || x >= in.shape()[0])
         return;
 
     __half one(1);
 
     __half2 dcord(x, y);
-    __half2 dim((long long)in.width(), (long long)in.height());
+    __half2 dim((long long)in.shape()[0], (long long)in.shape()[1]);
     __half2 ones(1, 1);
     __half2 twos(2, 2);
 
@@ -35,10 +35,10 @@ lm::cuda::distort(
     int sx = scord.x;
     int sy = scord.y;
 
-    if (sx < 0 || sy < 0 || sx >= in.width() || sy >= in.height())
-        out[y][x] = {};
+    if (sx < 0 || sy < 0 || sx >= in.shape()[0] || sy >= in.shape()[1])
+        out(x, y) = {};
     else
-        out[y][x] = in[sy][sx];
+        out(x, y) = in(sx, sy);
 }
 
 template <>
@@ -54,14 +54,14 @@ lm::cuda::distort(
     int x = threadIdx.x + blockIdx.x * blockDim.x;
     int y = threadIdx.y + blockIdx.y * blockDim.y;
 
-    if (y >= in.height() || x >= in.width())
+    if (y >= in.shape()[1] || x >= in.shape()[0])
         return;
 
     __half one(1);
     __half2 ones(one, one), twos(2, 2);
 
     __half2 v(x, y);
-    __half2 dim((int)in.width(), (int)in.height());
+    __half2 dim((int)in.shape()[0], (int)in.shape()[1]);
     __half2 cv = v / twos;
     __half2 nv = v / cv - ones;
 
@@ -74,8 +74,8 @@ lm::cuda::distort(
     int sx = dv.x;
     int sy = dv.y;
 
-    if (sx < 0 || sy < 0 || sx >= in.width() || sy >= in.height())
-        out[y][x] = {};
+    if (sx < 0 || sy < 0 || sx >= in.shape()[0] || sy >= in.shape()[1])
+        out(x, y) = {};
     else
-        out[y][x] = in[sy][sx];
+        out(x, y) = in(sx, sy);
 }

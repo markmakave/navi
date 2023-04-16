@@ -100,7 +100,7 @@ public:
     void
     resize(size_type width, size_type height)
     {
-        matrix<T>::resize(height, width);
+        matrix<T>::reshape(width, height);
     }
 
     void
@@ -206,7 +206,7 @@ public:
     }
     
     void
-    write(const char* filename, int quality = 100) const
+    write(const char* filename) const
     {
         std::string ext = filename;
         ext = ext.substr(ext.find_last_of(".") + 1);

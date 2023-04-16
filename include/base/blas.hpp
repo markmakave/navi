@@ -28,7 +28,7 @@ amax(
     int max_index = 0;
     
     for (size_type i = 1; i < x.size(); ++i)
-        if (x[i] > x[max_index])
+        if (x(i) > x(max_index))
             max_index = i;
 
     return max_index;
@@ -42,7 +42,7 @@ amin(
     int min_index = 0;
     
     for (size_type i = 1; i < x.size(); ++i)
-        if (x[i] < x[min_index])
+        if (x(i) < x[min_index])
             min_index = i;
 
     return min_index;
@@ -56,7 +56,7 @@ asum(
     T sum = {};
 
     for (size_type i = 0; i < x.size(); ++i)
-        sum += x[i];
+        sum += x(i);
 
     return sum;
 }
@@ -68,11 +68,11 @@ axpy(
     const array<T>& x, 
           array<T>& y
 ) {
-    if (y.size() != x.size())
-        y.resize(x.size());
+    y.reshape(x.shape());
 
+    #pragma omp parallel for
     for (size_type i = 0; i < x.size(); ++i)
-        y[i] = alpha * x[i] + y[i];
+        y(i) = alpha * x(i) + y(i);
 }
 
 template <typename T>
@@ -81,11 +81,10 @@ copy(
     const array<T>& x,
           array<T>& y
 ) {
-    if (y.size() != x.size())
-        y.resize(x.size());
+    y.reshape(x.size());
 
     for (size_type i = 0; i < x.size(); ++i)
-        y[i] = x[i];
+        y(i) = x(i);
 }
 
 template <typename T>
@@ -99,7 +98,7 @@ dot(
     T res = {};
 
     for (size_type i = 0; i < x.size(); ++i)
-        res += x[i] * y[i];
+        res += x(i) * y(i);
 
     return res;
 }
@@ -109,10 +108,10 @@ T
 nrm2(
     const array<T>& x
 ) {
-    T norm(0);
+    T norm{0};
 
     for (size_type i = 0; i < x.size(); ++i)
-        norm += x[i] * x[i];
+        norm += x(i) * x(i);
     
     return std::sqrt(norm);
 }
@@ -130,32 +129,30 @@ mv(
 ) {
     if (A_transpose)
     {
-        assert(x.size() == A.height());
-        if (y.size() != A.width())
-            y.resize(A.width());
+        assert(x.size() == A.shape()[1]);
+        y.reshape(A.shape()[0]);
 
         #pragma omp parallel for
-        for (int j = 0; j < A.width(); j++) {
+        for (int j = 0; j < A.shape()[0]; j++) {
             T sum = 0;
-            for (int i = 0; i < A.height(); i++) {
-                sum += A[i][j] * x[i];
+            for (int i = 0; i < A.shape()[1]; i++) {
+                sum += A(j, i) * x(i);
             }
-            y[j] = sum;
+            y(j) = sum;
         }
     } 
     else
     {
-        assert(x.size() == A.width());
-        if (y.size() != A.height())
-            y.resize(A.height());
+        assert(x.size() == A.shape()[0]);
+        y.reshape(A.shape()[1]);
         
         #pragma omp parallel for
-        for (int i = 0; i < A.height(); i++) {
+        for (int i = 0; i < A.shape()[1]; i++) {
             T sum = 0;
-            for (int j = 0; j < A.width(); j++) {
-                sum += A[i][j] * x[j];
+            for (int j = 0; j < A.shape()[0]; j++) {
+                sum += A(j, i) * x(j);
             }
-            y[i] = sum;
+            y(i) = sum;
         }
     }
 }
@@ -168,30 +165,25 @@ ger(
           T          alpha,
           matrix<T>& A
 ) {
-    assert(x.size() == A.height() && y.size() == A.width());
+    A.reshape(y.size(), x.size());
 
     #pragma omp parallel for
-    for (size_type i = 0; i < x.size(); ++i) {
-        for (size_type j = 0; j < y.size(); ++j) {
-            A[i][j] += alpha * x[i] * y[j];
-        }
-    }
+    for (size_type i = 0; i < x.size(); ++i)
+        for (size_type j = 0; j < y.size(); ++j)
+            A(j, i) += alpha * x(i) * y(j);
 }
 
 // L3
 
-template <typename T>
-void
-mm(
-    const matrix<T>& A, 
-    const matrix<T>& B, 
-          matrix<T>& C
-) {
-    assert(A.height() == B.height() && A.width() == B.width());
-    if (C.height() != A.height() || C.width() != A.width())
-        C.resize(A.height(), A.width());
-
-}
+// template <typename T>
+// void
+// mm(
+//     const matrix<T>& A, 
+//     const matrix<T>& B, 
+//           matrix<T>& C
+// ) {
+//     throw;
+// }
 
 // Universal
 
@@ -218,12 +210,11 @@ map(
           F         functor,
           array<T>& y
 ) {
-    if (y.size() != x.size())
-        y.resize(x.size());
+    y.reshape(x.shape());
 
     #pragma omp parallel for
     for (size_type i = 0; i < x.size(); ++i)
-        y[i] = functor(x[i]);
+        y(i) = functor(x(i));
 }
 
 template <typename T>
@@ -233,9 +224,8 @@ add(
     const array<T>& y,
           array<T>& z
 ) {
-    assert(x.size() == y.size());
-    if (z.size() != x.size())
-        z.resize(x.size());
+    assert(x.shape() == y.shape());
+    z.reshape(x.shape());
 
     binary_op(x.data(), y.data(), x.size(), [](T a, T b){ return a + b; }, z.data());
 }
@@ -247,9 +237,8 @@ sub(
     const array<T>& y,
           array<T>& z
 ) {
-    assert(x.size() == y.size());
-    if (z.size() != x.size())
-        z.resize(x.size());
+    assert(x.shape() == y.shape());
+    z.reshape(x.shape());
 
     binary_op(x.data(), y.data(), x.size(), [](T a, T b){ return a - b; }, z.data());
 }
@@ -261,9 +250,8 @@ mul(
     const array<T>& y,
           array<T>& z
 ) {
-    assert(x.size() == y.size());
-    if (z.size() != x.size())
-        z.resize(x.size());
+    assert(x.shape() == y.shape());
+    z.reshape(x.shape());
 
     binary_op(x.data(), y.data(), x.size(), [](T a, T b){ return a * b; }, z.data());
 }
@@ -275,9 +263,8 @@ div(
     const array<T>& y,
           array<T>& z
 ) {
-    assert(x.size() == y.size());
-    if (z.size() != x.size())
-        z.resize(x.size());
+    assert(x.shape() == y.shape());
+    z.reshape(x.shape());
 
     binary_op(x.data(), y.data(), x.size(), [](T a, T b){ return a / b; }, z.data());
 }
@@ -291,9 +278,9 @@ map(
           F          functor,
           matrix<T>& B
 ) {
-    if (B.height() != A.height() || B.width() != A.width())
-        B.resize(A.height(), A.width());
+    B.reshape(A.shape());
 
+    #pragma omp parallel for
     for (size_type i = 0; i < A.size(); ++i)
         B.data()[i]= functor(A.data()[i]);
 }
@@ -305,9 +292,8 @@ add(
     const matrix<T>& B,
           matrix<T>& C
 ) {
-    assert(A.height() == B.height() and A.width() == B.width());
-    if (C.height() != A.height() or C.width() != A.width())
-        C.resize(A.height(), A.width());
+    assert(A.shape() == B.shape());
+    C.reshape(A.shape());
 
     binary_op(A.data(), B.data(), A.size(), [](T a, T b){ return a + b; }, C.data());
 }
@@ -319,9 +305,8 @@ sub(
     const matrix<T>& B,
           matrix<T>& C
 ) {
-    assert(A.size() == B.size());
-    if (C.height() != A.height() or C.width() != A.width())
-        C.resize(A.height(), A.width());
+    assert(A.shape() == B.shape());
+    C.reshape(A.shape());
 
     binary_op(A.data(), B.data(), A.size(), [](T a, T b){ return a - b; }, C.data());
 }
@@ -333,9 +318,8 @@ mul(
     const matrix<T>& B,
           matrix<T>& C
 ) {
-    assert(A.size() == B.size());
-    if (C.height() != A.height() or C.width() != A.width())
-        C.resize(A.height(), A.width());
+    assert(A.shape() == B.shape());
+    C.reshape(A.shape());
 
     binary_op(A.data(), B.data(), A.size(), [](T a, T b){ return a * b; }, C.data());
 }
@@ -347,9 +331,8 @@ div(
     const matrix<T>& B,
           matrix<T>& C
 ) {
-    assert(A.size() == B.size());
-    if (C.height() != A.height() or C.width() != A.width())
-        C.resize(A.height(), A.width());
+    assert(A.shape() == B.shape());
+    C.reshape(A.shape());
 
     binary_op(A.data(), B.data(), A.size(), [](T a, T b){ return a / b; }, C.data());
 }

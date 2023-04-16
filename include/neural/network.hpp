@@ -31,23 +31,35 @@
 // #include "cuda/array.cuh"
 
 #include "base/blas.hpp"
+#include "cuda/blas.cuh"
+
+float
+relu(float x)
+{
+    return x > 0 ? x : 0;
+}
+
+float
+relu_derivative(float x)
+{
+    return x > 0 ? 1 : 0;
+}
+
+float
+sigmoid(float x)
+{
+    return 1.f / (1.f + std::exp(-x));
+}
+
+float
+sigmoid_derivative(float x)
+{
+    float s = sigmoid(x);
+    return s * (1.f - s);
+}
 
 namespace lm {
 namespace neural {
-
-template <typename T>
-T
-activation(T x) {
-    return std::tanh(x);
-};
-
-template <typename T>
-T
-activation_derivative(T x) {
-    T tanh2 = activation(x);
-    tanh2 *= tanh2;
-    return 1 - tanh2;
-};
 
 template <typename T>
 T random(T) {
@@ -67,72 +79,89 @@ public:
     {
         int sizes[sizeof...(Args)] = {args...};
 
-        _layers.resize(sizeof...(Args) - 1);
-        _weights.resize(_layers.size());
-        _biases.resize(_layers.size());
+        _layers.reshape(sizeof...(Args) - 1);
+        _weights.reshape(_layers.size());
+        _biases.reshape(_layers.size());
 
         for (unsigned i = 0; i < sizeof...(Args) - 1; ++i)
         {
-            _layers[i].resize(sizes[i+1]);
+            _layers(i).reshape(sizes[i+1]);
             
-            _weights[i].resize(sizes[i+1], sizes[i]);
-            blas::map(_weights[i], random<T>, _weights[i]);
+            _weights(i).reshape(sizes[i], sizes[i+1]);
+            blas::map(_weights(i), random<T>, _weights(i));
 
-            _biases[i].resize(_layers[i].size());
-            blas::map(_biases[i], random<T>, _biases[i]);
+            _biases(i).reshape(_layers(i).size());
+            blas::map(_biases(i), random<T>, _biases(i));
         }
     }
 
     const array<T>&
     forward(const array<T>& in)
     {
-        blas::mv(_weights[0], in, _layers[0]);
-        blas::add(_biases[0], _layers[0], _layers[0]);
-        blas::map(_layers[0], activation<T>, _layers[0]);
-
-        for (int i = 1; i < _weights.size(); ++i)
+        for (int i = 0; i < _weights.size(); ++i)
         {
-            blas::mv(_weights[i], _layers[i-1], _layers[i]);
-            blas::add(_biases[i], _layers[i], _layers[i]);
-            blas::map(_layers[i], activation<T>, _layers[i]);
+            blas::mv(_weights(i), i == 0 ? in : _layers(i-1), _layers(i));
+            blas::add(_biases(i), _layers(i), _layers(i));
+            blas::map(_layers(i), sigmoid, _layers(i));
         }
 
-        return _layers[_layers.size() - 1];
+        return _layers.back();
     }
 
-    T
-    train(const array<T>& in, const array<T>& target, T learning_rate)
-    {
-        array<T> error = forward(in);
-        blas::sub(error, target, error);
+    void
+    train(
+        const array<T>& in, 
+        const array<T>& target,
+              int epochs,
+              T learning_rate
+    ) {
+        assert(in.size() / _weights.front().shape()[0] == target.size() / _layers.back().size());
+        int dataset_size = target.size() / _layers.back().size();
 
-        // обратное распространение ошибки
-        for (int i = _layers.size() - 1; i >= 0; i--)
+        for (int epoch = 0; epoch < epochs; ++epoch)
         {
-            const array<T>&  output = _layers[i];
-            const array<T>&  input  = i == 0 ? in : _layers[i - 1];
-                  matrix<T>& weights = _weights[i];
-                  array<T>&  biases = _biases[i];
+            array<T> error;
+            array<T> gradient;
+            array<T> batch_in(_weights.front().shape()[0]), batch_target(_layers.back().size());
+            
+            for (int batch = 0; batch < dataset_size; ++batch)
+            {
+                int stride = batch * batch_in.size();
+                for (int i = 0; i < batch_in.size(); ++i)
+                    batch_in(i) = in(stride + i);
 
-            // вычисляем градиент функции потерь по выходу
-            array<T> output_gradient;
-            blas::map(output, activation_derivative<T>, output_gradient);
-            blas::mul(output_gradient, error, output_gradient);
+                stride = batch * batch_target.size();
+                for (int i = 0; i < batch_target.size(); ++i)
+                    batch_target(i) = target(stride + i);
 
-            // вычисляем градиент функции потерь по входу
-            array<T> input_gradient;
-            blas::mv(weights, output_gradient, input_gradient, true);
+                blas::sub(forward(batch_in), batch_target, error);
+                
+                // back propogation
+                for (int i = _layers.size() - 1; i >= 0; i--)
+                {
+                    const array<T>&  input   = i == 0 ? batch_in : _layers(i - 1);
+                    const array<T>&  output  = _layers(i);
+                          matrix<T>& weights = _weights(i);
+                          array<T>&  biases  = _biases(i);
 
-            // обновляем веса и смещения
-            blas::ger(output_gradient, input, -learning_rate, weights);
-            blas::sub(biases, output_gradient, biases);
+                    // calculate gradients
+                    blas::map(output, sigmoid_derivative, gradient);
+                    blas::mul(error, gradient, gradient);
 
-            // переходим к следующему слою
-            error = input_gradient;
+                    // update weights and biases
+                    blas::axpy(-learning_rate, gradient, biases);
+                    blas::ger(gradient, input, -learning_rate, weights);
+
+                    // calculate error for previous layer
+                    blas::mv(weights, gradient, error, true);
+                }
+
+                printf("\rEpoch: %d, Batch: %d", epoch + 1, batch + 1);
+            }
+
+            printf("\n");
         }
-
-        return blas::nrm2(error);
-    } 
+    }
 
 protected:
 

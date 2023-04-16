@@ -18,12 +18,10 @@
 #include "base/memory.hpp"
 #include "base/types.hpp"
 
-#include "cuda/cuda.hpp"
+#include "cuda/cuda.cuh"
 #include "cuda/matrix.cuh"
 #include "cuda/array.cuh"
-#include "cuda/kernel.cuh"
 #include "cuda/brief.cuh"
-#include "cuda/memory.cuh"
 
 #include "slam/brief.hpp"
 #include "slam/camera.hpp"

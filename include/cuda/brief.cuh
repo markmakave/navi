@@ -96,8 +96,8 @@ public:
             {
                 int index = i * 64 + j; 
 
-                int val1 = image[y + net[index].y1][x + net[index].x1];
-                int val2 = image[y + net[index].y2][x + net[index].x2];
+                int val1 = image(x + net[index].x1, y + net[index].y1);
+                int val2 = image(x + net[index].x2, y + net[index].y2);
 
                 desc.value[i] = desc.value[i] & ((val1 > val2) << j);
             }

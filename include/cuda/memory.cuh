@@ -26,10 +26,29 @@
 
 #include <cuda_runtime.h>
 
-#include "cuda/cuda.hpp"
+#include "cuda/cuda.cuh"
 
 namespace lm {
 namespace cuda {
+
+void*
+malloc(size_t size);
+
+void
+free(void* ptr);
+
+enum memcpy_kind {
+    H2H = 0,
+    H2D,
+    D2H,
+    D2D
+};
+
+void
+memcpy(void* dst, const void* src, size_t size, memcpy_kind kind);
+
+void
+memcpy_async(void* dst, const void* src, size_t size, memcpy_kind kind, const stream& stream);
 
 template <typename T>
 class proxy
@@ -147,12 +166,7 @@ public:
     void
     copy(const_pointer src, pointer dst, size_type size)
     {
-        #ifdef __CUDA_ARCH__
-        for (size_type i = 0; i < size; ++i)
-            dst[i] = src[i];
-        #else
         cuda::memcpy(dst, src, size * sizeof(value_type), D2D);
-        #endif
     }
 
 };

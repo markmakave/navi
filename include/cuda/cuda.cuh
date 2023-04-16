@@ -22,32 +22,11 @@
 
 */
 
+#pragma once
+
 #include <cuda_runtime.h>
 
-#include "cuda/matrix.cuh"
-#include "cuda/brief.cuh"
-#include "base/color.hpp"
-
-namespace lm {
-namespace cuda {
-
-__global__
-void
-descript(
-    const matrix<gray>                   image, 
-    const matrix<bool>                   features,
-    const brief<256>                     engine,
-          matrix<brief<256>::descriptor> descriptors
-) {
-    unsigned x = threadIdx.x + blockIdx.x * blockDim.x;
-    unsigned y = threadIdx.y + blockIdx.y * blockDim.y;
-
-    if (x >= image.shape()[0] - 3 || y >= image.shape()[1] - 3 || x < 3 || y < 3)
-        return;
-
-    if (features(x, y))
-        descriptors(x, y) = engine.descript(x, y, image);
-}
-
-}
-}
+#include "cuda/error.cuh"
+#include "cuda/stream.cuh"
+#include "cuda/kernel.cuh"
+#include "cuda/memory.cuh"

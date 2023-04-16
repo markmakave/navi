@@ -48,20 +48,20 @@ detect(
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (x >= image.width() - 3 || y >= image.height() - 3 || x < 3 || y < 3)
+    if (x >= image.shape()[0] - 3 || y >= image.shape()[1] - 3 || x < 3 || y < 3)
         return;
 
     gray circle[16] = {
-        image[y - 3][x], image[y - 3][x + 1], image[y - 2][x + 2], image[y - 1][x + 3],
-        image[y][x + 3], image[y + 1][x + 3], image[y + 2][x + 2], image[y + 3][x + 1],
-        image[y + 3][x], image[y + 3][x - 1], image[y + 2][x - 2], image[y + 1][x - 3],
-        image[y][x - 3], image[y - 1][x - 3], image[y - 2][x - 2], image[y - 3][x - 1]
+        image(x, y - 3), image(x + 1, y - 3), image(x + 2, y - 2), image(x + 3, y - 1),
+        image(x + 3, y), image(x + 3, y + 1), image(x + 2, y + 2), image(x + 1, y + 3),
+        image(x, y + 3), image(x - 1, y + 3), image(x - 2, y + 2), image(x - 3, y + 1),
+        image(x - 3, y), image(x - 3, y - 1), image(x - 2, y - 2), image(x - 1, y - 3)
     };
 
     // features[y][x] = fast11(circle, image[y][x], threshold);
-    if (fast11(circle, image[y][x], threshold))
+    if (fast11(circle, image(x, y), threshold))
     {
-        features[y][x] = true;
+        features(x, y) = true;
         atomicInc(nfeatures, 1);
     }
 }

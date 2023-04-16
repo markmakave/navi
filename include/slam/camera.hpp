@@ -137,7 +137,7 @@ public:
 
     camera&
     operator >> (image<lm::gray>& frame) {
-        if (width != frame.width() || height != frame.height()) {
+        if (width != frame.shape()[0] || height != frame.shape()[1]) {
             frame.resize(width, height);
         }
 
@@ -168,7 +168,7 @@ public:
 
     camera&
     operator >> (image<rgb>& frame) {
-        if (width != frame.width() || height != frame.height()) {
+        if (width != frame.shape()[0] || height != frame.shape()[1]) {
             frame.resize(width, height);
         }
         

@@ -24,30 +24,32 @@
 
 #pragma once
 
+#include <cstdint>
+
 namespace lm {
 
-typedef char                i8;
-typedef short               i16;
-typedef int                 i32;
-typedef long long           i64;
+using i8  = int8_t;
+using i16 = int16_t;
+using i32 = int32_t;
+using i64 = int64_t;
 
-typedef unsigned char       u8;
-typedef unsigned short      u16;
-typedef unsigned int        u32;
-typedef unsigned long long  u64;
+using u8  = uint8_t;
+using u16 = uint16_t;
+using u32 = uint32_t;
+using u64 = uint64_t;
 
-typedef signed char         s8;
-typedef signed short        s16;
-typedef signed int          s32;
-typedef signed long long    s64;
+using s8  = i8;
+using s16 = i16;
+using s32 = i32;
+using s64 = i64;
 
-typedef float               f32;
-typedef double              f64;
-typedef long double         f128;
+using f32  = float;
+using f64  = double;
+using f128 = long double;
 
-typedef u8                  byte;
-typedef u16                 word;
-typedef u32                 dword;
-typedef u64                 qword;
+using byte  = u8;
+using word  = u16;
+using dword = u32;
+using qword = u64;
 
 }

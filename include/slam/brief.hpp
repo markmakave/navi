@@ -90,7 +90,7 @@ template <unsigned N>
 void
 brief<N>::compute(const matrix<gray> &frame, feature& f) const
 {
-    if (f.x < radius || f.x >= frame.width() - radius || f.y < radius || f.y >= frame.height() - radius)
+    if (f.x < radius || f.x >= frame.shape()[0] - radius || f.y < radius || f.y >= frame.shape()[1] - radius)
         return;
 
     for (unsigned i = 0; i < N; ++i)

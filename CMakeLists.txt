@@ -18,6 +18,7 @@ target_include_directories(qoi PUBLIC vendor/qoi)
 
 add_library(lm 
     src/base/image.cpp
+    src/cuda/blas.cu
     src/cuda/blas.cpp
     src/cuda/cuda.cpp
     src/cuda/detect.cu

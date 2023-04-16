@@ -4,12 +4,13 @@
 
 using namespace lm;
 
-#define EPOCHS 1
-
 int main()
 {
     std::ifstream train_images("../dataset/neural/mnist/train-images-idx3-ubyte");
     std::ifstream train_labels("../dataset/neural/mnist/train-labels-idx1-ubyte");
+
+    train_images.seekg(16);
+    train_labels.seekg(8);
 
     if (!train_images or !train_labels)
     {
@@ -17,34 +18,25 @@ int main()
         throw;
     }
 
-    neural::network<float> nn(28*28, 10);
+    neural::network<float> nn(28*28, 128, 10);
 
     // TRAIN
 
-    array<u8> raw_in(28*28);
-    array<float> in, target(10);
+    int dataset_size = 60000;
 
-    train_images.seekg(16);
-    train_labels.seekg(8);
+    array<u8> raw_in(28*28 * dataset_size), raw_labels(1 * dataset_size);
+    train_images.read((char*)raw_in.data(), raw_in.size() * sizeof(u8));
+    train_labels.read((char*)raw_labels.data(), raw_labels.size() * sizeof(u8));
 
-    for (int epoch = 1; epoch <= EPOCHS; ++epoch)
-    {
-        for (int i = 1; i <= 60000; ++i)
-        {
-            train_images.read((char*)raw_in.data(), raw_in.size());
-            in = array<float>(raw_in);
+    array<float> in(raw_in.size()), target(10 * raw_labels.size());
+    for (i64 i = 0; i < raw_in.size(); ++i)
+        in(i) = raw_in(i) / 255.f;
 
-            u8 label;
-            train_labels.read((char*)&label, 1);
-            target.fill(0.f);
-            target[label] = 1.f;
+    target.fill(0.f);
+    for (i64 i = 0; i < raw_labels.size(); ++i)
+        target(10 * i + raw_labels(i)) = 1.f;
 
-            float error = nn.train(in, target, 0.1f);
-
-            printf("\rEpoch: %d. Training %05d/60000. Error: %f", epoch, i, error);
-        }
-    }
-    printf("\n");
+    nn.train(in, target, 20, 0.01f);
 
     // TEST
 
@@ -62,14 +54,20 @@ int main()
 
     int ncorrect = 0;
 
+    raw_in.reshape(28*28);
+    in.reshape(raw_in.size());
+
     for (int i = 1; i <= 10000; ++i)
     {
-        test_images.read((char*)in.data(), in.size());
+        test_images.read((char*)raw_in.data(), raw_in.size());
+
+        for (i64 i = 0; i < raw_in.size(); ++i)
+            in(i) = raw_in(i) / 255.f;
 
         lm::u8 label;
         test_labels.read((char*)&label, 1);
 
-        const array<float>& prediction = nn.forward(in);
+        const auto& prediction = nn.forward(in);
         int max_index = blas::amax(prediction);
 
         if (max_index == label)

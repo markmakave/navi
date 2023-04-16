@@ -38,57 +38,61 @@ namespace blas {
 template <typename T>
 int
 amax(
-    const cuda::array<T>& x,
-          int&            max,
-    const cuda::stream&   stream = cuda::stream::main
+    const array<T>& x,
+    
+    const stream&   stream = stream::main
 );
 
 template <typename T>
 int
 amin(
-    const cuda::array<T>& x, 
-          int&            min,
-    const cuda::stream&   stream = cuda::stream::main
+    const array<T>& x, 
+
+    const stream&   stream = stream::main
 );
 
 template <typename T>
 T
 asum(
-    const cuda::array<T>& x,
-          T&              sum,
-    const cuda::stream&   stream = cuda::stream::main
+    const array<T>& x,
+
+    const stream&   stream = stream::main
 );
 
 template <typename T>
 void
 axpy(
-    const T               alpha,
-    const cuda::array<T>& x, 
-          cuda::array<T>& y, 
-    const cuda::stream&   stream = cuda::stream::main
+    const T         alpha,
+    const array<T>& x, 
+          array<T>& y, 
+
+    const stream&   stream = stream::main
 );
 
 template <typename T>
 void
 copy(
-    const cuda::array<T>& x,
-          cuda::array<T>& y,
-    const cuda::stream&   stream = cuda::stream::main
+    const array<T>& x,
+          array<T>& y,
+
+    const stream&   stream = stream::main
 );
 
 template <typename T>
 T
 dot(
-    const cuda::array<T>& x,
-    const cuda::array<T>& y,
-    const cuda::stream&   stream = cuda::stream::main
+    const array<T>& x,
+    const array<T>& y,
+
+    const stream&   stream = stream::main
 );
 
 template <typename T>
 T
 nrm2(
-    const cuda::array<T>& x,
-    const cuda::stream&   stream = cuda::stream::main
+    const array<T>& x,
+
+    const stream&   stream = stream::main
 );
 
 // rot
@@ -100,8 +104,8 @@ nrm2(
 template <typename T>
 void
 swap(
-    cuda::array<T>& x,
-    cuda::array<T>& y
+    array<T>& x,
+    array<T>& y
 );
 
 // L2
@@ -109,10 +113,23 @@ swap(
 template <typename T>
 void
 mv(
-    const cuda::matrix<T>& A,
-    const cuda::array<T>&  x,
-          cuda::array<T>&  y,
-    const cuda::stream&    stream = cuda::stream::main
+    const matrix<T>& A,
+    const array<T>&  x,
+          array<T>&  y,
+
+    const bool       A_transpose = false,
+    const stream&    stream = stream::main
+);
+
+template <typename T>
+void
+ger(
+    const array<T>&  x,
+    const array<T>&  y,
+          T          alpha,
+          matrix<T>& A,
+
+    const stream&    stream = stream::main
 );
 
 // L3
@@ -120,10 +137,112 @@ mv(
 template <typename T>
 void
 mm(
-    const cuda::matrix<T>& A,
-    const cuda::matrix<T>& B,
-          cuda::matrix<T>& C,
-    const cuda::stream&    stream = cuda::stream::main
+    const matrix<T>& A,
+    const matrix<T>& B,
+          matrix<T>& C,
+
+    const stream&    stream = stream::main
+);
+
+// Universal
+
+template <typename T>
+__global__
+void
+add_kernel(
+    const lm::cuda::array<T> x,
+    const lm::cuda::array<T> y,
+          lm::cuda::array<T> z
+);
+
+template <typename T>
+void
+add(
+    const array<T>& x,
+    const array<T>& y,
+          array<T>& z,
+
+    const stream&   stream = stream::main
+);
+
+template <typename T>
+__global__
+void
+sub_kernel(
+    const lm::cuda::array<T> x,
+    const lm::cuda::array<T> y,
+          lm::cuda::array<T> z
+);
+
+template <typename T>
+void
+sub(
+    const array<T>& x,
+    const array<T>& y,
+          array<T>& z,
+
+    const stream&   stream = stream::main
+);
+
+template <typename T>
+__global__
+void
+mul_kernel(
+    const lm::cuda::array<T> x,
+    const lm::cuda::array<T> y,
+          lm::cuda::array<T> z
+);
+
+template <typename T>
+void
+mul(
+    const array<T>& x,
+    const array<T>& y,
+          array<T>& z,
+
+    const stream&   stream = stream::main
+);
+
+__device__
+float
+sigmoid(float x);
+
+__device__
+float
+sigmoid_derivative(float x);
+
+template <typename T>
+__global__
+void
+sigmoid_kernel(
+    const array<T> x,
+          array<T> y
+);
+
+template <typename T>
+__global__
+void
+sigmoid_derivative_kernel(
+    const array<T> x,
+          array<T> y
+);
+
+template <typename T>
+void
+sigmoid(
+    const array<T>& x,
+          array<T>& y,
+
+    const stream&   stream = stream::main
+);
+
+template <typename T>
+void
+sigmoid_derivative(
+    const array<T>& x,
+          array<T>& y,
+
+    const stream&   stream = stream::main
 );
 
 }
