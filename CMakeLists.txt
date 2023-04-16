@@ -5,7 +5,7 @@ project(lumina LANGUAGES C CXX CUDA)
 find_package(PNG REQUIRED)
 find_package(CUDA REQUIRED)
 
-set(CMAKE_CXX_FLAGS "-std=c++17 -fopenmp -Ofast -Wall -Wextra")
+set(CMAKE_CXX_FLAGS "-std=c++17 -fopenmp -O3 -Wall -Wextra")
 include_directories(
     .
     include
@@ -32,5 +32,8 @@ add_executable(navi src/navi/main.cpp)
 target_link_libraries(navi qoi ${PNG_LIBRARIES} pthread cuda lm)
 # target_precompile_headers(navi PUBLIC include/lumina.hpp)
 
-add_executable(neural_test test/neural/main.cpp)
-target_link_libraries(neural_test lm)
+add_executable(neural_train test/neural/train.cpp)
+target_link_libraries(neural_train lm)
+
+add_executable(neural_infer test/neural/infer.cpp)
+target_link_libraries(neural_infer lm)

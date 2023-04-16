@@ -70,7 +70,6 @@ axpy(
 ) {
     y.reshape(x.shape());
 
-    #pragma omp parallel for
     for (size_type i = 0; i < x.size(); ++i)
         y(i) = alpha * x(i) + y(i);
 }
@@ -116,6 +115,22 @@ nrm2(
     return std::sqrt(norm);
 }
 
+template <typename T>
+void
+softmax(
+    const array<T>& x,
+          array<T>& y
+) {
+    y.reshape(x.shape());
+
+    T accum = 0;
+    for (size_type i = 0; i < x.size(); ++i)
+        accum += std::exp(x(i));
+
+    for (size_type i = 0; i < x.size(); ++i)
+        y(i) = std::exp(x(i)) / accum;
+}
+
 // L2
 
 template <typename T>
@@ -132,7 +147,6 @@ mv(
         assert(x.size() == A.shape()[1]);
         y.reshape(A.shape()[0]);
 
-        #pragma omp parallel for
         for (int j = 0; j < A.shape()[0]; j++) {
             T sum = 0;
             for (int i = 0; i < A.shape()[1]; i++) {
@@ -146,7 +160,6 @@ mv(
         assert(x.size() == A.shape()[0]);
         y.reshape(A.shape()[1]);
         
-        #pragma omp parallel for
         for (int i = 0; i < A.shape()[1]; i++) {
             T sum = 0;
             for (int j = 0; j < A.shape()[0]; j++) {
@@ -167,7 +180,6 @@ ger(
 ) {
     A.reshape(y.size(), x.size());
 
-    #pragma omp parallel for
     for (size_type i = 0; i < x.size(); ++i)
         for (size_type j = 0; j < y.size(); ++j)
             A(j, i) += alpha * x(i) * y(j);
@@ -196,7 +208,6 @@ binary_op(
           F         functor,
           T*        z
 ) {
-    #pragma omp parallel for
     for (size_type i = 0; i < size; ++i)
         z[i] = functor(x[i], y[i]);
 }
@@ -212,7 +223,6 @@ map(
 ) {
     y.reshape(x.shape());
 
-    #pragma omp parallel for
     for (size_type i = 0; i < x.size(); ++i)
         y(i) = functor(x(i));
 }
@@ -280,7 +290,6 @@ map(
 ) {
     B.reshape(A.shape());
 
-    #pragma omp parallel for
     for (size_type i = 0; i < A.size(); ++i)
         B.data()[i]= functor(A.data()[i]);
 }

@@ -18,7 +18,7 @@ int main()
         throw;
     }
 
-    neural::network<float> nn(28*28, 128, 10);
+    neural::network nn(28*28, 10);
 
     // TRAIN
 
@@ -30,13 +30,13 @@ int main()
 
     array<float> in(raw_in.size()), target(10 * raw_labels.size());
     for (i64 i = 0; i < raw_in.size(); ++i)
-        in(i) = raw_in(i) / 255.f;
+        in(i) = raw_in(i) / 255.0;
 
     target.fill(0.f);
     for (i64 i = 0; i < raw_labels.size(); ++i)
         target(10 * i + raw_labels(i)) = 1.f;
 
-    nn.train(in, target, 20, 0.01f);
+    nn.train(in, target, 5, 0.01);
 
     // TEST
 
@@ -78,4 +78,6 @@ int main()
     printf("\n");
 
     std::cout << "Correct " << ncorrect / 100.0 << '%' << std::endl;
+
+    nn.write("experimental.lmm");
 }

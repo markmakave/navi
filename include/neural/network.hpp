@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include <random>
+
 #include "base/matrix.hpp"
 #include "base/array.hpp"
 
@@ -33,45 +35,26 @@
 #include "base/blas.hpp"
 #include "cuda/blas.cuh"
 
-float
-relu(float x)
-{
-    return x > 0 ? x : 0;
-}
-
-float
-relu_derivative(float x)
-{
-    return x > 0 ? 1 : 0;
-}
-
-float
-sigmoid(float x)
-{
-    return 1.f / (1.f + std::exp(-x));
-}
-
-float
-sigmoid_derivative(float x)
-{
-    float s = sigmoid(x);
-    return s * (1.f - s);
-}
+#include "neural/layer.hpp"
 
 namespace lm {
 namespace neural {
 
-template <typename T>
-T random(T) {
+static
+float random(float) {
     static std::random_device rd;
     static std::mt19937 engine(rd());
-    static std::normal_distribution<T> dis(0, 0.1);
+    static std::normal_distribution<float> dis(0, 0.1);
     return dis(engine);
 }
 
-template <typename T>
 class network
 {
+public:
+
+    using type = float;
+    using size_type = i64;
+
 public:
 
     template <typename... Args>
@@ -88,21 +71,26 @@ public:
             _layers(i).reshape(sizes[i+1]);
             
             _weights(i).reshape(sizes[i], sizes[i+1]);
-            blas::map(_weights(i), random<T>, _weights(i));
+            blas::map(_weights(i), random, _weights(i));
 
             _biases(i).reshape(_layers(i).size());
-            blas::map(_biases(i), random<T>, _biases(i));
+            blas::map(_biases(i), random, _biases(i));
         }
     }
 
-    const array<T>&
-    forward(const array<T>& in)
+    network(const char* filename)
+    {
+        read(filename);
+    }
+
+    const array<type>&
+    forward(const array<type>& in)
     {
         for (int i = 0; i < _weights.size(); ++i)
         {
             blas::mv(_weights(i), i == 0 ? in : _layers(i-1), _layers(i));
             blas::add(_biases(i), _layers(i), _layers(i));
-            blas::map(_layers(i), sigmoid, _layers(i));
+            blas::map(_layers(i), activation, _layers(i));
         }
 
         return _layers.back();
@@ -110,19 +98,19 @@ public:
 
     void
     train(
-        const array<T>& in, 
-        const array<T>& target,
-              int epochs,
-              T learning_rate
+        const array<type>& in, 
+        const array<type>& target,
+              int           epochs,
+              type         learning_rate
     ) {
         assert(in.size() / _weights.front().shape()[0] == target.size() / _layers.back().size());
         int dataset_size = target.size() / _layers.back().size();
 
         for (int epoch = 0; epoch < epochs; ++epoch)
         {
-            array<T> error;
-            array<T> gradient;
-            array<T> batch_in(_weights.front().shape()[0]), batch_target(_layers.back().size());
+            array<type> error;
+            array<type> gradient;
+            array<type> batch_in(_weights.front().shape()[0]), batch_target(_layers.back().size());
             
             for (int batch = 0; batch < dataset_size; ++batch)
             {
@@ -139,13 +127,13 @@ public:
                 // back propogation
                 for (int i = _layers.size() - 1; i >= 0; i--)
                 {
-                    const array<T>&  input   = i == 0 ? batch_in : _layers(i - 1);
-                    const array<T>&  output  = _layers(i);
-                          matrix<T>& weights = _weights(i);
-                          array<T>&  biases  = _biases(i);
+                    const array<type>&  input   = i == 0 ? batch_in : _layers(i - 1);
+                    const array<type>&  output  = _layers(i);
+                          matrix<type>& weights = _weights(i);
+                          array<type>&  biases  = _biases(i);
 
                     // calculate gradients
-                    blas::map(output, sigmoid_derivative, gradient);
+                    blas::map(output, activation_derivative, gradient);
                     blas::mul(error, gradient, gradient);
 
                     // update weights and biases
@@ -163,11 +151,77 @@ public:
         }
     }
 
+    size_type
+    in_size() const
+    {
+        return _weights.front().shape()[0];
+    }
+
+    size_type
+    out_size() const
+    {
+        return _weights.back().shape()[1];
+    }
+
+    void
+    read(const char* filename)
+    {
+        std::ifstream file(filename);
+        if (!file)
+            log::error("No such model file:", filename);
+
+        size_type model_size;
+        file.read((char*)&model_size, sizeof(model_size));
+        _layers.reshape(model_size);
+        _weights.reshape(model_size);
+        _biases.reshape(model_size);
+
+        for (size_type l = 0; l < model_size; ++l)
+        {
+            auto& weights = _weights(l);
+            auto& biases = _biases(l);
+
+            size_type in_size, out_size;
+            file.read((char*)&in_size, sizeof(in_size));
+            file.read((char*)&out_size, sizeof(out_size));
+
+            weights.reshape(in_size, out_size);
+            biases.reshape(out_size);
+
+            file.read((char*)weights.data(), weights.size() * sizeof(float));
+            file.read((char*)biases.data(), biases.size() * sizeof(float));
+        }
+    }
+
+    void
+    write(const char* filename) const
+    {
+        std::ofstream file(filename);
+
+        size_type model_size = _layers.size();
+        file.write((char*)&model_size, sizeof(model_size));
+
+        for (size_type l = 0; l < model_size; ++l)
+        {
+            const auto& weights = _weights(l);
+            const auto& biases = _biases(l);
+
+            size_type in_size = weights.shape()[0], out_size = weights.shape()[1];
+            file.write((char*)&in_size, sizeof(in_size));
+            file.write((char*)&out_size, sizeof(out_size));
+            file.write((char*)weights.data(), weights.size() * sizeof(float));
+            file.write((char*)biases.data(), biases.size() * sizeof(float));
+        }
+    }
+
 protected:
 
-    array<array<T>>  _layers;
-    array<matrix<T>> _weights;
-    array<array<T>>  _biases;
+    array<array<type>>  _layers;
+    array<matrix<type>> _weights;
+    array<array<type>>  _biases;
+
+    float (*activation)(float) = tanh;
+    float (*activation_derivative)(float) = tanh_derivative;
 };
 
 }

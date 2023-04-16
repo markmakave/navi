@@ -354,7 +354,7 @@ public:
             out << "×" << t._shape[n];
         out << '\n';
 
-        value_type max_index = 0;
+        size_type max_index = 0;
         for (size_type i = 0; i < t.size(); ++i)
             if (t._data[i] > t._data[max_index])
                 max_index = i;
