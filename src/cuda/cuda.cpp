@@ -1,6 +1,6 @@
 /* 
 
-    Copyright (c) 2023 Mark Mokhov
+    Copyright (c) 2023 Mokhov Mark
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -117,7 +117,9 @@ lm::cuda::malloc(size_t size)
 void
 lm::cuda::free(void* ptr)
 {
-    cudaFree(ptr);
+    error status = cudaFree(ptr);
+    if (status)
+        log::error("cudaFree failed:", status.describe());
 }
 
 void

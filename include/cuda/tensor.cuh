@@ -1,6 +1,6 @@
 /* 
 
-    Copyright (c) 2023 Mark Mokhov
+    Copyright (c) 2023 Mokhov Mark
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -24,16 +24,12 @@
 
 #pragma once
 
-#include "base/types.hpp"
 #include "base/tensor.hpp"
-#include "cuda/memory.cuh"
-
-#include <cuda_runtime.h>
 
 namespace lm {
 namespace cuda {
 
-template <i32 N>
+template <i64 N>
 struct shape_t
 {
 public:
@@ -58,22 +54,22 @@ public:
     __host__ __device__
     shape_t(const shape_t& s)
     {
-        for (i32 n = 0; n < N; ++n)
+        for (size_type n = 0; n < N; ++n)
             _data[n] = s._data[n];
     }
 
-    __host__
-    shape_t (const lm::shape_t<N>& s)
+    __host__ __device__
+    shape_t(const lm::shape_t<N>& s)
     {
-        for (i32 n = 0; n < N; ++n)
-            (*this)[n] = s[n];
+        for (size_type n = 0; n < N; ++n)
+            _data[n] = s[n];
     }
 
     __host__ __device__
     shape_t&
     operator = (const shape_t& s)
     {
-        for (i32 n = 0; n < N; ++n)
+        for (size_type n = 0; n < N; ++n)
             _data[n] = s._data[n];
         return *this;
     }
@@ -82,7 +78,7 @@ public:
     bool
     operator == (const shape_t& s) const
     {
-        for (i32 n = 0; n < N; ++n)
+        for (size_type n = 0; n < N; ++n)
             if (_data[n] != s[n])
                 return false;
         return true;
@@ -103,27 +99,37 @@ public:
     }
 
     __host__ __device__
-    size_type
+    const size_type&
     operator [] (size_type dim) const
     {
         return _data[dim];
     }
 
-    __host__
-    operator lm::shape_t<N> () const
+    __host__ __device__
+    size_type
+    size() const
     {
-        shape_t<N> s;
-        for (i32 n = 0; n < N; ++n)
-            s[n] = (*this)[n];
+        size_type s = 1;
+        for (size_type n = 0; n < N; ++n)
+            s *= _data[n];
         return s;
     }
 
-private:
+    __host__ __device__
+    operator lm::shape_t<N>() const
+    {
+        lm::shape_t<N> s;
+        for (size_type n = 0; n < N; ++n)
+            s[n] = _data[n];
+        return s;
+    }
+
+protected:
 
     size_type _data[N];
 };
 
-template <i32 N, typename T, typename _alloc>
+template <i64 N, typename T, typename _alloc>
 class tensor
 {
 public:
@@ -181,7 +187,17 @@ public:
         t._shape = shape_type();
     }
 
+    template <typename U, typename alloc>
     __host__ __device__
+    tensor(const tensor<N, U, alloc>& t)
+    :   _data(nullptr),
+        _shape()
+    {
+        reshape(t.shape());
+        for (size_type i = 0; i < t.size(); ++i)
+            _alloc::access(_data + i) = static_cast<value_type>(t.data()[i]);
+    }
+
     ~tensor()
     {
         _deallocate();
@@ -234,7 +250,6 @@ public:
     {
         for (size_type i = 0; i < size(); ++i)
             _alloc::access(_data + i) = fillament;
-
     }
 
     __host__ __device__
@@ -262,10 +277,7 @@ public:
     size_type
     size() const
     {
-        size_type s = 1;
-        for (size_type n = 0; n < N; ++n)
-            s *= _shape[n];
-        return s;
+        return _shape.size();
     }
 
     template <typename... Size>
@@ -365,24 +377,192 @@ public:
 
     #endif
 
-    template <typename alloc>
-    __host__
-    void
-    operator << (const lm::tensor<N, value_type, alloc>& t)
+    __host__ __device__
+    decltype(auto)
+    operator [] (size_type index)
     {
-        reshape(t.shape());
-        // _alloc::copy(t.data(), _data, t.size(), memcpy_kind::H2D);
-        memcpy(_data, t.data(), t.size() * sizeof(value_type), memcpy_kind::H2D);
+        return _alloc::access(_data + index);
     }
 
-    template <typename alloc>
+    __host__ __device__
+    decltype(auto)
+    operator [] (size_type index) const
+    {
+        return _alloc::access(_data + index);
+    }
+
+    __host__ __device__
+    decltype(auto)
+    front()
+    {
+        return _alloc::access(_data + 0);
+    }
+
+    __host__ __device__
+    decltype(auto)
+    front() const
+    {
+        return _alloc::access(_data + 0);
+    }
+
+    __host__ __device__
+    decltype(auto)
+    back()
+    {
+        return _alloc::access(_data + size() - 1);
+    }
+
+    __host__ __device__
+    decltype(auto)
+    back() const
+    {
+        return _alloc::access(_data + size() - 1);
+    }
+
+    __host__ __device__
+    iterator
+    begin()
+    {
+        return _data;
+    }
+
+    __host__ __device__
+    const_iterator
+    begin() const
+    {
+        return _data;
+    }
+
+    __host__ __device__
+    iterator
+    end()
+    {
+        return _data + size();
+    }
+
+    __host__ __device__
+    const_iterator
+    end() const
+    {
+        return _data + size();
+    }
+
+    __host__
+    friend
+    std::ostream&
+    operator << (std::ostream& out, const tensor& t)
+    {
+        out << "Tensor<" << typeid(value_type).name() << "> " << t._shape[0];
+        for (size_type n = 1; n < N; ++n)
+            out << "×" << t._shape[n];
+        out << '\n';
+
+        size_type max_index = 0;
+        for (size_type i = 0; i < t.size(); ++i)
+            if (t._data[i] > t._data[max_index])
+                max_index = i;
+
+        int number_length = std::log10(t._data[max_index]) + 1;
+
+        size_type index[N] = {};
+
+        std::function<void(size_type)> print;
+        print = [&](size_type dim){
+            if (dim == 0)
+            {
+                for (size_type n = 0; n < t.shape()[0]; ++n)
+                {
+                    index[0] = n;
+                    out << std::setw(number_length + 1) << t(index) << ' ';
+                }
+            } else {
+                for (size_type n = 0; n < t.shape()[dim]; ++n)
+                {
+                    index[dim] = n;
+
+                    if (n != 0)
+                        out << std::setw(N - dim) << ' ';
+                    out << "[";
+
+                    print(dim - 1);
+
+                    out << "]";
+                    if (n != t.shape()[dim] - 1)
+                        out << '\n';
+                }
+            }
+        };
+
+        out << "[";
+        print(N - 1);
+        out << "]";
+
+        return out;
+    }
+
+    __host__
+    void write(std::ofstream& file) const
+    {
+        size_type order = N;
+        file.write((char*)&order, sizeof(order));
+        for (size_type n = 0; n < N; ++n)
+            file.write((char*)&_shape[n], sizeof(_shape[n]));
+
+        file.write((char*)_data, size() * sizeof(value_type));
+    }
+
     __host__
     void
-    operator >> (lm::tensor<N, value_type, alloc>& t) const
+    write(const char* filename) const
     {
-        t.reshape(_shape);
-        // _alloc::copy(_data, t.data(), size(), memcpy_kind::D2H);
-        memcpy(t.data(), _data, size() * sizeof(value_type), memcpy_kind::D2H);
+        std::ofstream file(filename);
+        write(file);
+    }
+
+    __host__
+    void
+    read(std::ifstream& file)
+    {
+        size_type order;
+        file.read((char*)&order, sizeof(order));
+
+        assert(order == N);
+
+        shape_type shape;
+        for (size_type n = 0; n < N; ++n)
+            file.read((char*)&shape[n], sizeof(shape[n]));
+
+        reshape(shape);
+
+        file.read((char*)_data, size() * sizeof(value_type));
+    }
+
+    __host__
+    void
+    read(const char* filename)
+    {
+        std::ifstream file(filename);
+        read(file);
+    }
+
+    template <typename U, typename alloc>
+    __host__
+    void
+    operator << (const lm::tensor<N, U, alloc>& t)
+    {
+        static_assert(sizeof(T) == sizeof(U));
+        reshape(shape_type(t.shape()));
+        memcpy(_data, t.data(), t.size() * sizeof(U), H2D);
+    }
+
+    template <typename U, typename alloc>
+    __host__
+    void
+    operator >> (lm::tensor<N, U, alloc>& t) const
+    {
+        static_assert(sizeof(T) == sizeof(U));
+        t.reshape(_shape.operator lm::shape_t<N>());
+        memcpy(t.data(), _data, size() * sizeof(T), D2H);
     }
 
 protected:

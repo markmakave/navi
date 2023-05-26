@@ -1,6 +1,5 @@
 /* 
-
-    Copyright (c) 2023 Mark Mokhov
+    Copyright (c) 2023 Mokhov Mark
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -19,92 +18,107 @@
     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
-
 */
 
 #pragma once
 
-#include <array>
-#include <bitset>
+#include <iostream>
 #include <random>
+#include <cstdint>
+#include <bitset>
 
-#include "base/matrix.hpp"
+#include "cuda/array.cuh"
+#include "cuda/matrix.cuh"
 #include "base/color.hpp"
 
 namespace lm {
 namespace slam {
 
-struct feature;
-
-struct dim2
+struct point_pair
 {
-    float x, y;
+    int x1, x2, y1, y2;
 };
 
-template <unsigned N>
+template <int N>
 class brief
 {
+public:
 
-    unsigned radius;
-    std::array<std::pair<dim2, dim2>, N> net;
+    using descriptor = std::bitset<N>;
 
 public:
 
-    typedef std::bitset<N> descriptor;
-
-    brief(unsigned radius)
-    :   radius(radius)
+    brief()
+    :   _net(N)
     {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        static std::binomial_distribution<int> dist(50, 0.5);
 
-        std::mt19937 engine(std::chrono::system_clock::now().time_since_epoch().count());
-        std::binomial_distribution<int> distribution(radius * 2, 0.5);
-
-        for (auto& pair : net)
+        for (int i = 0; i < 256; ++i)
         {
-            pair.first.x() = distribution(engine) - radius;
-            pair.first.y() = distribution(engine) - radius;
+            auto& pair = _net[i];
 
-            pair.second.x() = distribution(engine) - radius;
-            pair.second.y() = distribution(engine) - radius;
+            do {
+                pair.x1 = dist(gen) - 25;
+            } while (pair.x1 >= 25 or pair.x1 <= -25);
+
+            do {
+                pair.y1 = dist(gen) - 25;
+            } while (pair.y1 >= 25 or pair.y1 <= -25);
+
+            do {
+                pair.x2 = dist(gen) - 25;
+            } while (pair.x2 >= 25 or pair.x2 <= -25);
+
+            do {
+                pair.y2 = dist(gen) - 25;
+            } while (pair.y2 >= 25 or pair.y2 <= -25);
         }
     }
 
-    void
-    compute(const matrix<gray> &frame, feature& f) const;
-
-    static
-    unsigned
-    distance(const descriptor& d1, const descriptor& d2)
+    descriptor
+    descript(int x, int y, const matrix<gray>& image) const
     {
-        return (d1 ^ d2).count();
+        descriptor desc;
+
+        for (int i = 0; i < N; ++i)
+        {
+            int val1 = image(x + _net[i].x1, y + _net[i].y1);
+            int val2 = image(x + _net[i].x2, y + _net[i].y2);
+
+            desc[i] = val1 > val2;
+        }
+
+        return desc;
     }
+
+    // __host__
+    // image<rgb>
+    // draw() const
+    // {
+    //     image<rgb> image(500, 500, 0);
+
+    //     for (int i = 0; i < 256; ++i)
+    //     {
+    //         const auto& pair = net[i];
+
+    //         image.line(pair.x1 * 10 + 250, pair.y1 * 10 + 250, pair.x2 * 10 + 250, pair.y2 * 10 + 250, rgb::random());
+    //     }
+
+    //     return image;
+    // }
+
+private:
+
+    array<point_pair> _net;
 };
 
 struct feature
 {
-    unsigned x, y;
-    brief<256>::descriptor descriptor = 0;
+    brief<256>::descriptor desc;
+    int x, y;
 };
 
-template <unsigned N>
-void
-brief<N>::compute(const matrix<gray> &frame, feature& f) const
-{
-    if (f.x < radius || f.x >= frame.shape()[0] - radius || f.y < radius || f.y >= frame.shape()[1] - radius)
-        return;
-
-    for (unsigned i = 0; i < N; ++i)
-    {
-        auto& pair = net[i];
-        auto& p1 = pair.first;
-        auto& p2 = pair.second;
-
-        auto& v1 = frame[f.y + p1.y()][f.x + p1.x()];
-        auto& v2 = frame[f.y + p2.y()][f.x + p2.x()];
-
-        f.descriptor[i] = v1 < v2;
-    }
 }
-
-} // namespace slam
-} // namespace lm
+}

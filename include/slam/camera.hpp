@@ -1,6 +1,6 @@
 /* 
 
-    Copyright (c) 2023 Mark Mokhov
+    Copyright (c) 2023 Mokhov Mark
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -43,17 +43,15 @@
 #include "base/color.hpp"
 #include "base/image.hpp"
 
+#include "util/timer.hpp"
+
 namespace lm {
 namespace slam {
-
-// Camera device class (OS dependent) /////////////////////////////////////
 
 class camera : public device
 {
 public:
 
-// Constructors ///////////////////////////////////////////////////////////
-    
     camera(const char* filename, unsigned width = 640, unsigned height = 480, int buffer_count = 1) 
     :   device(filename),
         width(width),
@@ -66,8 +64,6 @@ public:
         _request_buffers();
         _allocate_buffers();
     }
-
-// Device info printing method ////////////////////////////////////////////
 
     void
     info() override {
@@ -100,8 +96,6 @@ public:
         
     }
 
-// Camera streaming start method //////////////////////////////////////////
-
     void
     start() {
         int type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -122,8 +116,6 @@ public:
         streaming = true;
     }
 
-// Camera streaming stop method ///////////////////////////////////////////
-
     void
     stop() {
         int type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -133,17 +125,14 @@ public:
         streaming = false;
     }
 
-// Camera grayscale frame capturing method ////////////////////////////////
-
     camera&
     operator >> (image<lm::gray>& frame) {
         if (width != frame.shape()[0] || height != frame.shape()[1]) {
             frame.resize(width, height);
         }
 
-        if (!streaming) {
+        if (!streaming)
             start();
-        }
 
         v4l2_buffer buf = {};
         buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -164,17 +153,14 @@ public:
         return *this;
     }
 
-// Camera rgba frame capturing method /////////////////////////////////////
-
     camera&
     operator >> (image<rgb>& frame) {
         if (width != frame.shape()[0] || height != frame.shape()[1]) {
             frame.resize(width, height);
         }
         
-        if (!streaming) {
+        if (!streaming)
             start();
-        }
 
         v4l2_buffer buf = {};
         buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -201,7 +187,29 @@ public:
         return *this;
     }
 
-// Destructor /////////////////////////////////////////////////////////////
+    camera&
+    operator >> (array<byte>& frame)
+    {
+        if (!streaming)
+            start();
+
+        v4l2_buffer buf = {};
+        buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        buf.memory = V4L2_MEMORY_MMAP;
+        
+        if(ioctl(VIDIOC_DQBUF, &buf) != 0) {
+            throw std::runtime_error("Camera buffer dequeuing failed");
+        }
+
+        frame.reshape(buf.length);
+        std::memcpy(frame.data(), buffers[buf.index], buf.length);
+
+        if(ioctl(VIDIOC_QBUF, &buf) != 0) {
+            throw std::runtime_error("Camera buffer queuing failed");
+        }
+
+        return *this;
+    }
 
     ~camera() {
         if (streaming) {
@@ -219,7 +227,7 @@ private:
         fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         fmt.fmt.pix.width = width;
         fmt.fmt.pix.height = height;
-        fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+        fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
         fmt.fmt.pix.field = V4L2_FIELD_NONE;
 
         if (ioctl(VIDIOC_S_FMT, &fmt) != 0) {
@@ -260,13 +268,11 @@ private:
     unsigned width, height;
     std::vector<uint8_t*> buffers;
     bool streaming;
-
 };
 
 } // namespace slam
 } // namespace lm
 
-
-// how to set camera exposure to manual mode using v4l2-ctl
+// bash command to select video exposure in v4l2
 // v4l2-ctl -d /dev/video0 -c exposure_auto=1
-// v4l2-ctl -d /dev/video0 -c exposure_absolute=100
+

@@ -18,7 +18,7 @@ int main()
         throw;
     }
 
-    neural::network nn(28*28, 10);
+    neural::network nn(28*28, 128, 10);
 
     // TRAIN
 
@@ -61,8 +61,8 @@ int main()
     {
         test_images.read((char*)raw_in.data(), raw_in.size());
 
-        for (i64 i = 0; i < raw_in.size(); ++i)
-            in(i) = raw_in(i) / 255.f;
+        for (i64 j = 0; j < raw_in.size(); ++j)
+            in(j) = raw_in(j) / 255.f;
 
         lm::u8 label;
         test_labels.read((char*)&label, 1);

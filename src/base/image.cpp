@@ -1,6 +1,6 @@
 /* 
 
-    Copyright (c) 2023 Mark Mokhov
+    Copyright (c) 2023 Mokhov Mark
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -57,6 +57,34 @@ lm::image<lm::gray>::encode<lm::image<lm::gray>::format::png>() const
 
 template <>
 template <>
+lm::array<lm::byte>
+lm::image<bool>::encode<lm::image<bool>::format::png>() const
+{
+    array<byte> buffer;
+
+    png::image<png::gray_pixel_1> img(_shape[0], _shape[1]);
+    for (unsigned y = 0; y < _shape[1]; ++y)
+    {
+        auto& img_row = img.get_row(y);
+
+        for (unsigned x = 0; x < _shape[0]; ++x)
+            img_row[x] = png::gray_pixel_1((*this)(x, y));
+    }
+
+    std::stringstream ss;
+    img.write_stream(ss);
+    ss.seekg(0, std::ios::end);
+    size_type size = ss.tellg();
+    ss.seekg(0, std::ios::beg);
+
+    buffer.reshape(size);
+    ss.read((char*)buffer.data(), size);
+
+    return buffer;
+}
+
+template <>
+template <>
 void
 lm::image<lm::gray>::decode<lm::image<lm::gray>::format::png>(const lm::array<lm::byte>& buffer)
 {
@@ -75,6 +103,12 @@ lm::image<lm::gray>::decode<lm::image<lm::gray>::format::png>(const lm::array<lm
             (*this)(x, y) = reinterpret_cast<lm::byte&>(img_row[x]);
     }
 }
+
+template <>
+template <>
+void
+lm::image<bool>::decode<lm::image<bool>::format::png>([[maybe_unused]] const lm::array<lm::byte>& buffer)
+{}
 
 // PNG RGB
 
@@ -194,32 +228,22 @@ lm::image<lm::gray>::encode<lm::image<lm::gray>::format::qoi>() const
     return {};
 }
 
+
+template <>
+template <>
+lm::array<lm::byte>
+lm::image<bool>::encode<lm::image<bool>::format::qoi>() const
+{
+    lm::log::error("image<gray>::encode<qoi> not implemented");
+    return {};
+}
+
 template <>
 template <>
 void
-lm::image<lm::gray>::decode<lm::image<lm::gray>::format::qoi>(const lm::array<lm::byte>& buffer)
+lm::image<lm::gray>::decode<lm::image<lm::gray>::format::qoi>([[maybe_unused]] const lm::array<lm::byte>& buffer)
 {
-    qoi_desc desc = {};
-    void* ptr = qoi_decode(buffer.data(), buffer.size(), &desc, 0);
-
-    resize(desc.width, desc.height);
-
-    if (desc.channels == sizeof(rgb))
-    {
-        rgb* data = reinterpret_cast<rgb*>(ptr);
-
-        size_type size = this->size();
-        for (size_type i = 0; i < size; ++i)
-            _data[i] = data[i];
-    }
-    else // desc.channels == sizeof(rgba)
-    {
-        rgb* data = reinterpret_cast<rgba*>(ptr);
-
-        size_type size = this->size();
-        for (size_type i = 0; i < size; ++i)
-            _data[i] = data[i];
-    }
+    lm::log::error("image<gray>::decode<qoi> not implemented");
 }
 
 // QOI RGB

@@ -1,6 +1,6 @@
 /* 
 
-    Copyright (c) 2023 Mark Mokhov
+    Copyright (c) 2023 Mokhov Mark
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -50,38 +50,35 @@ public:
         uint64_t value[4] = {};
     };
 
-    point_pair* net;
-
 public:
 
     __host__
     brief()
+    :   _net(N)
     {
         static std::random_device rd;
         static std::mt19937 gen(rd());
         static std::binomial_distribution<int> dist(50, 0.5);
 
-        net = cuda::managed_allocator<point_pair>::allocate(N);
-
         for (int i = 0; i < 256; ++i)
         {
-            auto& pair = net[i];
+            auto& pair = _net[i];
 
             do {
                 pair.x1 = dist(gen) - 25;
-            } while (pair.x1 >= 25 || pair.x1 <= -25);
+            } while (pair.x1 >= 25 or pair.x1 <= -25);
 
             do {
                 pair.y1 = dist(gen) - 25;
-            } while (pair.y1 >= 25 || pair.y1 <= -25);
+            } while (pair.y1 >= 25 or pair.y1 <= -25);
 
             do {
                 pair.x2 = dist(gen) - 25;
-            } while (pair.x2 >= 25 || pair.x2 <= -25);
+            } while (pair.x2 >= 25 or pair.x2 <= -25);
 
             do {
                 pair.y2 = dist(gen) - 25;
-            } while (pair.y2 >= 25 || pair.y2 <= -25);
+            } while (pair.y2 >= 25 or pair.y2 <= -25);
         }
     }
 
@@ -96,19 +93,13 @@ public:
             {
                 int index = i * 64 + j; 
 
-                int val1 = image(x + net[index].x1, y + net[index].y1);
-                int val2 = image(x + net[index].x2, y + net[index].y2);
+                int val1 = image(x + _net[index].x1, y + _net[index].y1);
+                int val2 = image(x + _net[index].x2, y + _net[index].y2);
 
                 desc.value[i] = desc.value[i] & ((val1 > val2) << j);
             }
 
         return desc;
-    }
-
-    __host__
-    ~brief()
-    {
-        cuda::managed_allocator<point_pair>::deallocate(net);
     }
 
     // __host__
@@ -127,6 +118,9 @@ public:
     //     return image;
     // }
 
+private:
+
+    array<point_pair, managed_allocator<point_pair>> _net;
 };
 
 }

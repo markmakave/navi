@@ -16,6 +16,15 @@ public:
     {}
 
     __host__
+    auto
+    bind(dim3 blocks, dim3 threads, const stream& stream) const
+    {
+        return [this, blocks, threads, &stream](const Args&... args) {
+            return operator()(blocks, threads, stream, args...);
+        };
+    }
+
+    __host__
     void
     operator () (dim3 blocks, dim3 threads, const stream& stream, const Args&... args) const
     {

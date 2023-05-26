@@ -24,15 +24,78 @@
 
 #pragma once
 
-#include "base/memory.hpp"
-#include "base/tensor.hpp"
+#include <cmath>
+
+#include "base/types.hpp"
 
 namespace lm {
 
-template <typename T>
-using array_view = tensor_view<1, T>;
+template <i64 N, typename T>
+struct vec
+{
+public:
 
-template <typename T, typename _alloc = heap_allocator<T>>
-using array = tensor<1, T, _alloc>;
+	using value_type	  = T;
+	using pointer		  = value_type*;
+	using const_pointer	  = const value_type*;
+	using reference		  = value_type&;
+	using const_reference = const value_type&;
+	using iterator		  = pointer;
+	using const_iterator  = const_pointer;
+	using size_type		  = decltype(N);
+
+public:
+
+	vec()
+	  : _data {}
+	{}
+
+	template <typename... Args>
+	vec(Args... args)
+	  : _data {args...}
+	{
+		static_assert(sizeof...(Args) == N);
+	}
+
+	reference
+	operator[] (size_type index)
+	{
+		return _data[index];
+	}
+
+	const_reference
+	operator[] (size_type index) const
+	{
+		return _data[index];
+	}
+
+	pointer
+	data()
+	{
+		return _data;
+	}
+
+	const_pointer
+	data() const
+	{
+		return _data;
+	}
+
+	value_type
+	length() const
+	{
+		value_type length = 0;
+		for (size_type n = 0; n < N; ++n)
+			length += _data[n] * _data[n];
+
+		return std::sqrt(length);
+	}
+
+protected:
+
+	value_type _data[N];
+};
+
+using vec3 = vec<3, float>;
 
 } // namespace lm

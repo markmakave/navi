@@ -24,15 +24,15 @@
 
 #pragma once
 
+#include "base/types.hpp"
+
 #include "base/memory.hpp"
+#include "base/tensor_view.hpp"
 #include "base/tensor.hpp"
+#include "base/array.hpp"
+#include "base/matrix.hpp"
+#include "base/blas.hpp"
+#include "base/vec.hpp"
 
-namespace lm {
-
-template <typename T>
-using array_view = tensor_view<1, T>;
-
-template <typename T, typename _alloc = heap_allocator<T>>
-using array = tensor<1, T, _alloc>;
-
-} // namespace lm
+#include "base/color.hpp"
+#include "base/image.hpp"

@@ -1,6 +1,6 @@
 /* 
 
-    Copyright (c) 2023 Mark Mokhov
+    Copyright (c) 2023 Mokhov Mark
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -35,14 +35,11 @@ __device__
 bool
 fast11(const gray *p, int origin, int t);
 
-__managed__ unsigned nfeatures = 0;
-
 __global__
 void
 detect(
     const cuda::matrix<gray> image,
     const int                threshold,
-          unsigned*          nfeatures,
           cuda::matrix<bool> features
 ) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -58,12 +55,8 @@ detect(
         image(x - 3, y), image(x - 3, y - 1), image(x - 2, y - 2), image(x - 1, y - 3)
     };
 
-    // features[y][x] = fast11(circle, image[y][x], threshold);
     if (fast11(circle, image(x, y), threshold))
-    {
         features(x, y) = true;
-        atomicInc(nfeatures, 1);
-    }
 }
 
 static

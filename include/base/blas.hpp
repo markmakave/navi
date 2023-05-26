@@ -4,6 +4,7 @@
 #include "base/matrix.hpp"
 
 #include <cmath>
+#include <cassert>
 #include <functional>
 
 namespace lm {
@@ -19,6 +20,7 @@ using size_type = int64_t;
 // - copy
 // - dot
 // - nrm2
+// - softmax
 
 template <typename T>
 int
@@ -211,6 +213,17 @@ binary_op(
     for (size_type i = 0; i < size; ++i)
         z[i] = functor(x[i], y[i]);
 }
+
+// template <typename Container, typename Functor>
+// binary_op(
+//     const Container& x,
+//     const Container& y,
+//           Functor&&  f,
+//           Container& z
+// ) {
+//     for (const auto& [v1, v2] : zip(x, y))
+//         z = f(v1, v2);
+// }
 
 // Array
 

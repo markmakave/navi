@@ -1,26 +1,33 @@
+#include <functional>
 #include <iostream>
 #include <random>
 
 #define NDEBUG
 
-#include "util/timer.hpp"
+#include "lumina.hpp"
+
+#include "cuda/kernels.cuh"
+#include "slam/camera.hpp"
 #include "util/profiler.hpp"
+#include "util/timer.hpp"
 
-#include "base/tensor.hpp"
-#include "base/memory.hpp"
-
-#include "cuda/tensor.cuh"
-#include "cuda/cuda.cuh"
-#include "cuda/matrix.cuh"
+#include "slam/sense.hpp"
 
 using namespace lm;
 
-int main()
+int
+main(int argc, char** argv)
 {
-    tensor<3, int, heap_allocator<int>> t(5, 5, 5);
+	profiler::begin("trace.json");
 
-    for (int i = 0; i < t.size(); ++i)
-        t.data()[i] = i;
+	slam::sense sense("/dev/video0", "/dev/ttyTHS1");
 
-    std::cout << t;
+	image<byte> tof_frame;
+
+	while (true) {
+		sense >> tof_frame;
+		tof_frame.write("out.png");
+	}
+
+	profiler::end();
 }

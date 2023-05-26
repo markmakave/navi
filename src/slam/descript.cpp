@@ -1,5 +1,4 @@
 /* 
-
     Copyright (c) 2023 Mokhov Mark
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,44 +18,30 @@
     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
-
 */
 
-#pragma once
-
-#include <iostream>
-#include <chrono>
-
-#include <util/log.hpp>
+#include "base/matrix.hpp"
+#include "base/array.hpp"
+#include "base/color.hpp"
+#include "slam/brief.hpp"
 
 namespace lm {
+namespace slam {
 
-class timer {
-public:
+void
+descript(
+    const matrix<gray>&                 frame,
+    const brief<256>&                   engine,
+          array<feature>&               features
+) {
+    using size_type = matrix<gray>::size_type;
 
-    timer(const std::string& name, int iterations = 1)
-    :   _begin(std::chrono::high_resolution_clock::now()),
-        _name(name),
-        _iterations(iterations)
-    {}
-
-    ~timer() {
-        auto end = std::chrono::high_resolution_clock::now();
-        auto difference = std::chrono::duration_cast<std::chrono::nanoseconds>(end - _begin).count();
-        double seconds = difference /  1000000000.0;
-
-        if (_iterations == 1)
-            lm::log::info(_name, "done in", seconds, "seconds");
-        else 
-            lm::log::info(_name, "iteration average time is", seconds / _iterations, "seconds");
+    for (size_type i = 0; i < features.size(); ++i)
+    {
+        auto& f = features(i); 
+        f.desc = engine.descript(f.x, f.y, frame);
     }
+}
 
-private:
-
-    std::chrono::high_resolution_clock::time_point _begin;
-    std::string _name;
-    int _iterations;
-
-};
-
+}
 }
