@@ -7,6 +7,7 @@
 #include <termios.h>
 
 #include <cstring>
+#include <cassert>
 
 #if __cplusplus >= 201703L
 
@@ -40,6 +41,8 @@ public:
 		int				   packet_length = 10022;
 		static array<byte> cache(packet_length * 2);
 		int				   border = 0;
+
+		frame.reshape(100, 100);
 
 		// fill cache with full packet
 		while (true) {
@@ -80,20 +83,23 @@ public:
 
 		log::info("frame ID:", *(unsigned short*)(cache.data() + 16));
 
-		frame.resize(100, 100);
-
 		// copy data to frame
 		for (int i = 0; i < frame.size(); ++i)
 			frame[i] = cache[i + 20];
 
-		// rotate frame by transpose and flip
-		for (int y = 0; y < frame.shape(1); ++y)
-			for (int x = 0; x < y; ++x)
-				std::swap(frame(x, y), frame(y, x));
+		// rotate frame
+		for (int y = 0; y < frame.shape(1) / 2; ++y)
+			for (int x = 0; x < frame.shape(0) / 2; ++x) {
+				byte backup = frame(x, y);
 
-		for (int y = 0; y < frame.shape(1); ++y)
-			for (int x = 0; x < frame.shape(0) / 2; ++x)
-				std::swap(frame(x, y), frame(frame.shape(0) - x - 1, y));
+				frame(x, y) = frame(y, frame.shape(0) - 1 - x);
+				frame(y, frame.shape(0) - 1 - x) =
+					frame(frame.shape(0) - 1 - x, frame.shape(1) - 1 - y);
+
+				frame(frame.shape(0) - 1 - x, frame.shape(1) - 1 - y) =
+					frame(frame.shape(1) - 1 - y, x);
+				frame(frame.shape(1) - 1 - y, x) = backup;
+			}
 
 		return *this;
 	}
@@ -104,14 +110,26 @@ public:
 		static image<byte> raw;
 		(*this) >> raw;
 
-		auto interpolate = [](byte x) {
+		auto interpolate = [](byte x) -> rgba {
 			if (x == 255)
 				return rgba(0, 0, 0, 0);
+
+			float factor = x / 255.0f * 2.0f;
+
+			if (factor < 1.f) {
+				return rgba(255 * (1.f - factor), 255 * factor, 0, 255);
+			} else {
+				factor -= 1.f;
+				return rgba(0, 255 * (1.f - factor), 255 * factor, 255);
+			}
 		};
 
-		for (int y = 0; y < frame.shape(1); ++y)
-			for (int x = 0; x < frame.shape(0); ++x)
-				frame(x, y) = interpolate(raw(x, y));
+		frame.reshape(raw.shape());
+
+		for (int i = 0; i < raw.size(); ++i)
+			frame[i] = interpolate(raw[i]);
+
+		return *this;
 	}
 
 private:
@@ -134,9 +152,9 @@ private:
 		int err = tcsetattr(_tof_fd, TCSAFLUSH, &tio);
 		assert(err == 0);
 
-		_tof_at("AT+BAUD=6");
+		_tof_at("AT+BAUD=8");
 
-		cfsetispeed(&tio, B1000000);
+		cfsetispeed(&tio, B3000000);
 		err = tcsetattr(_tof_fd, TCSAFLUSH, &tio);
 		assert(err == 0);
 

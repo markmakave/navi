@@ -7,27 +7,21 @@
 #include "lumina.hpp"
 
 #include "cuda/kernels.cuh"
-#include "slam/camera.hpp"
-#include "util/profiler.hpp"
-#include "util/timer.hpp"
-
-#include "slam/sense.hpp"
 
 using namespace lm;
 
 int
-main(int argc, char** argv)
+main()
 {
-	profiler::begin("trace.json");
+	// slam::sense	 sense(nullptr, "/dev/ttyTHS1");
+	slam::camera camera("/dev/video0", 1280, 720, 2);
 
-	slam::sense sense("/dev/video0", "/dev/ttyTHS1");
+	// image<rgba> tof_frame;
+	image<rgb> rgb_frame;
 
-	image<byte> tof_frame;
+	// sense >> tof_frame;
+	camera >> rgb_frame;
 
-	while (true) {
-		sense >> tof_frame;
-		tof_frame.write("out.png");
-	}
-
-	profiler::end();
+	// tof_frame.write("tof.png");
+	rgb_frame.write("rgb.png");
 }

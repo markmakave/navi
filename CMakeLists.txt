@@ -5,7 +5,7 @@ project(lumina LANGUAGES C CXX CUDA)
 find_package(PNG REQUIRED)
 find_package(CUDA REQUIRED)
 
-set(CMAKE_CXX_FLAGS "-std=c++17 -fopenmp -Ofast -Wall -Wextra")
+set(CMAKE_CXX_FLAGS "-std=c++17 -fopenmp -O3 -Wall -Wextra")
 include_directories(
     .
     include
