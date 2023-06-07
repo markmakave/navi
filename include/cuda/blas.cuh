@@ -29,7 +29,7 @@
 #include "cuda/array.cuh"
 #include "cuda/matrix.cuh"
 
-namespace lm {
+namespace lumina {
 namespace cuda {
 namespace blas {
 
@@ -150,9 +150,9 @@ template <typename T>
 __global__
 void
 add_kernel(
-    const lm::cuda::array<T> x,
-    const lm::cuda::array<T> y,
-          lm::cuda::array<T> z
+    const lumina::cuda::array<T> x,
+    const lumina::cuda::array<T> y,
+          lumina::cuda::array<T> z
 );
 
 template <typename T>
@@ -169,9 +169,9 @@ template <typename T>
 __global__
 void
 sub_kernel(
-    const lm::cuda::array<T> x,
-    const lm::cuda::array<T> y,
-          lm::cuda::array<T> z
+    const lumina::cuda::array<T> x,
+    const lumina::cuda::array<T> y,
+          lumina::cuda::array<T> z
 );
 
 template <typename T>
@@ -188,9 +188,9 @@ template <typename T>
 __global__
 void
 mul_kernel(
-    const lm::cuda::array<T> x,
-    const lm::cuda::array<T> y,
-          lm::cuda::array<T> z
+    const lumina::cuda::array<T> x,
+    const lumina::cuda::array<T> y,
+          lumina::cuda::array<T> z
 );
 
 template <typename T>

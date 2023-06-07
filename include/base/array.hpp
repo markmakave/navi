@@ -27,9 +27,9 @@
 #include "base/memory.hpp"
 #include "base/tensor.hpp"
 
-namespace lm {
+namespace lumina {
 
 template <typename T, typename _alloc = heap_allocator<T>>
 using array = tensor<1, T, _alloc>;
 
-} // namespace lm
+} // namespace lumina

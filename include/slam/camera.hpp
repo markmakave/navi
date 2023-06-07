@@ -45,7 +45,7 @@
 
 #include "util/timer.hpp"
 
-namespace lm {
+namespace lumina {
 namespace slam {
 
 class camera : public device
@@ -129,7 +129,7 @@ public:
 	}
 
 	camera&
-	operator>> (image<lm::gray>& frame)
+	operator>> (image<lumina::gray>& frame)
 	{
 		if (width != frame.shape()[0] || height != frame.shape()[1]) {
 			frame.resize(width, height);
@@ -289,7 +289,7 @@ private:
 };
 
 } // namespace slam
-} // namespace lm
+} // namespace lumina
 
 // bash command to select video exposure in v4l2
 // v4l2-ctl -d /dev/video0 -c exposure_auto=1

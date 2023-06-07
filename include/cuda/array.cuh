@@ -27,11 +27,11 @@
 #include "cuda/memory.cuh"
 #include "cuda/tensor.cuh"
 
-namespace lm {
+namespace lumina {
 namespace cuda {
 
 template <typename T, typename _alloc = device_allocator<T>>
 using array = tensor<1, T, _alloc>;
 
 } // namespace cuda
-} // namespace lm
+} // namespace lumina

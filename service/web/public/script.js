@@ -1,4 +1,4 @@
-const maxPoints = 10000;
+const maxPoints = 10000
 
 var positions = new Float32Array(maxPoints * 3);
 var positionAttribute = new THREE.BufferAttribute(positions, 3);
@@ -14,6 +14,12 @@ function initRenderer() {
     var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     var renderer = new THREE.WebGLRenderer();
 
+    window.onresize = function () {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
     // set the viewport size
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
@@ -26,27 +32,26 @@ function initRenderer() {
     scene.add(camera);
 
     // add points
-    
+
     var geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', positionAttribute);
-    geometry.setAttribute('color', colorAttribute);
+    // geometry.setAttribute('color', colorAttribute);
 
     var material = new THREE.PointsMaterial({
         size: 2,
-        sizeAttenuation: false,
-        vertexColors: true
+        sizeAttenuation: false
     })
     var points = new THREE.Points(geometry, material);
     scene.add(points);
 
     connectWS();
 
-    render = function() {
+    render = function () {
         requestAnimationFrame(render);
         renderer.render(scene, camera);
     }
     render();
-}   
+}
 
 function connectWS() {
     const ws = new WebSocket('wss://markmakave.com/dashboard');
@@ -64,6 +69,8 @@ function connectWS() {
         })
     }
 
+    var current = 0
+
     ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
 
@@ -72,14 +79,19 @@ function connectWS() {
         const z = data.z;
 
         const point = new THREE.Vector3(x, y, z);
-        point.toArray(positions, data.id * 3);
+        point.toArray(positions, current * 3);
+
+        current++
+        if (current == maxPoints)
+            current = 0
+
 
         positionAttribute.needsUpdate = true;
 
     }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     initRenderer()
     connectWS()
 })

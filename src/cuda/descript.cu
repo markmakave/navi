@@ -26,7 +26,7 @@
 #include "cuda/brief.cuh"
 #include "base/color.hpp"
 
-namespace lm {
+namespace lumina {
 namespace cuda {
 
 __global__

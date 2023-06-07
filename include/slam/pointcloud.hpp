@@ -5,7 +5,7 @@
 #include "base/array.hpp"
 #include "base/memory.hpp"
 
-namespace lm {
+namespace lumina {
 namespace slam {
 
 class pointcloud

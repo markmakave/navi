@@ -29,7 +29,7 @@
 
 #include <util/log.hpp>
 
-namespace lm {
+namespace lumina {
 
 class timer {
 public:
@@ -46,9 +46,9 @@ public:
         double seconds = difference /  1000000000.0;
 
         if (_iterations == 1)
-            lm::log::info(_name, "done in", seconds, "seconds");
+            lumina::log::info(_name, "done in", seconds, "seconds");
         else 
-            lm::log::info(_name, "iteration average time is", seconds / _iterations, "seconds");
+            lumina::log::info(_name, "iteration average time is", seconds / _iterations, "seconds");
     }
 
 private:

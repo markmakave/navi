@@ -15,14 +15,14 @@ using json = nlohmann::json;
 int
 main(int argc, char** argv)
 {
-    lm::neural::network net(INPUT_SIZE, HIDDEN_SIZE, OUTPUT_SIZE);
+    lumina::neural::network net(INPUT_SIZE, HIDDEN_SIZE, OUTPUT_SIZE);
 
     std::ifstream chartFile(argv[1]);
     json          chart;
     chartFile >> chart;
 
-    lm::array<float> input(INPUT_SIZE);
-    lm::array<float> output(OUTPUT_SIZE);
+    lumina::array<float> input(INPUT_SIZE);
+    lumina::array<float> output(OUTPUT_SIZE);
 
     std::map<int64_t, std::pair<float, float>> chartValues;
 
@@ -44,11 +44,11 @@ main(int argc, char** argv)
 
         // fill output
         output[0] = chart[i + INPUT_SIZE]["y"].get<float>();
-        lm::log::info("Output:", output[0]);
+        lumina::log::info("Output:", output[0]);
 
         net.train(input, output, 0.001f);
 
-        lm::log::info("Training entry:", i);
+        lumina::log::info("Training entry:", i);
     }
 
     // infer
@@ -67,7 +67,7 @@ main(int argc, char** argv)
         int64_t nextTime = chart[i + INPUT_SIZE]["x"].get<int64_t>();
         chartValues[nextTime].second = out[0];
 
-        lm::log::info("Inference entry:", i);
+        lumina::log::info("Inference entry:", i);
     }
 
     // write to csv

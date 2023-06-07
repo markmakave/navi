@@ -8,7 +8,7 @@
 
 #include "cuda/kernels.cuh"
 
-using namespace lm;
+using namespace lumina;
 
 int
 main()

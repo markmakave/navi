@@ -2,7 +2,7 @@
 
 #include "base/types.hpp"
 
-namespace lm {
+namespace lumina {
 namespace cuda {
 
 template <int lower, int upper>
@@ -42,7 +42,7 @@ struct rgb
     {}
 
     __host__
-    rgb(lm::rgb color)
+    rgb(lumina::rgb color)
     :   r(color.r),
         g(color.g),
         b(color.b)
@@ -55,7 +55,7 @@ struct rgb
     }
 
     __host__
-    operator lm::rgb() const
+    operator lumina::rgb() const
     {
         return {r, g ,b};
     }
@@ -84,7 +84,7 @@ struct rgba : rgb
     {}
 
     __host__ __device__
-    rgba(const lm::rgba& c)
+    rgba(const lumina::rgba& c)
     :   rgb(c.r, c.g, c.b),
         a(c.a)
     {}
@@ -96,7 +96,7 @@ struct rgba : rgb
     }
 
     __host__
-    operator lm::rgba() const
+    operator lumina::rgba() const
     {
         return {r, g, b, a};
     }

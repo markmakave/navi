@@ -5,12 +5,12 @@
 #include "base/color.hpp"
 #include "slam/brief.hpp"
 
-namespace lm {
+namespace lumina {
 namespace slam {
 
 void
 detect(
-    const matrix<lm::gray>& input, 
+    const matrix<lumina::gray>& input, 
           matrix<bool>&     output
 );
 

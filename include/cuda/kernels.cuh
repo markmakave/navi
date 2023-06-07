@@ -32,13 +32,13 @@
 #include "cuda/brief.cuh"
 #include "cuda/color.cuh"
 
-namespace lm {
+namespace lumina {
 namespace cuda {
 
 __global__
 void
 detect(
-    const matrix<lm::gray> image, 
+    const matrix<lumina::gray> image, 
     const int              threshold,
           matrix<bool>     features
 );

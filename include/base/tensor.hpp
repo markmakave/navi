@@ -34,7 +34,7 @@
 #include <cassert>
 #include <cmath>
 
-namespace lm {
+namespace lumina {
 
 template <i64 N>
 struct shape_t
@@ -546,4 +546,4 @@ protected:
 	}
 };
 
-} // namespace lm
+} // namespace lumina

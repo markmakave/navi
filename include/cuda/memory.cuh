@@ -28,7 +28,7 @@
 
 #include "cuda/cuda.cuh"
 
-namespace lm {
+namespace lumina {
 namespace cuda {
 
 void*

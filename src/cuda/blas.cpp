@@ -37,7 +37,7 @@ cublasGetErrorString(cublasStatus_t status)
 
 template <>
 void
-lm::cuda::blas::axpy(
+lumina::cuda::blas::axpy(
     const float               alpha,
     const cuda::array<float>& x,
           cuda::array<float>& y,
@@ -57,7 +57,7 @@ lm::cuda::blas::axpy(
     );
 
     if (status != CUBLAS_STATUS_SUCCESS)
-        lm::log::error("CUBLAS axpy error:", cublasGetErrorString(status));
+        lumina::log::error("CUBLAS axpy error:", cublasGetErrorString(status));
 
     stream.synchronize();
 
@@ -66,7 +66,7 @@ lm::cuda::blas::axpy(
 
 template <>
 int
-lm::cuda::blas::amax(
+lumina::cuda::blas::amax(
     const array<float>& x,
 
     const stream&   stream
@@ -83,7 +83,7 @@ lm::cuda::blas::amax(
     );
 
     if (status != CUBLAS_STATUS_SUCCESS)
-        lm::log::error("CUBLAS axpy error:", cublasGetErrorString(status));
+        lumina::log::error("CUBLAS axpy error:", cublasGetErrorString(status));
 
     stream.synchronize();
 
@@ -94,7 +94,7 @@ lm::cuda::blas::amax(
 
 template <>
 float
-lm::cuda::blas::nrm2(
+lumina::cuda::blas::nrm2(
     const array<float>& x,
 
     const stream&   stream
@@ -107,7 +107,7 @@ lm::cuda::blas::nrm2(
     );
 
     if (status != CUBLAS_STATUS_SUCCESS)
-        lm::log::error("CUBLAS axpy error:", cublasGetErrorString(status));
+        lumina::log::error("CUBLAS axpy error:", cublasGetErrorString(status));
 
     stream.synchronize();
 
@@ -118,7 +118,7 @@ lm::cuda::blas::nrm2(
 
 template <>
 void
-lm::cuda::blas::mv(
+lumina::cuda::blas::mv(
     const matrix<float>& A,
     const array<float>&  x,
           array<float>&  y,
@@ -171,7 +171,7 @@ lm::cuda::blas::mv(
     }
 
     if (status != CUBLAS_STATUS_SUCCESS)
-        lm::log::error("CUBLAS axpy error:", cublasGetErrorString(status));
+        lumina::log::error("CUBLAS axpy error:", cublasGetErrorString(status));
 
     stream.synchronize();
 
@@ -180,7 +180,7 @@ lm::cuda::blas::mv(
 
 template <>
 void
-lm::cuda::blas::ger(
+lumina::cuda::blas::ger(
     const array<float>&  x,
     const array<float>&  y,
           float          alpha,
@@ -206,7 +206,7 @@ lm::cuda::blas::ger(
     );
 
     if (status != CUBLAS_STATUS_SUCCESS)
-        lm::log::error("CUBLAS axpy error:", cublasGetErrorString(status));
+        lumina::log::error("CUBLAS axpy error:", cublasGetErrorString(status));
 
     stream.synchronize();
 
@@ -215,7 +215,7 @@ lm::cuda::blas::ger(
 
 template <>
 void
-lm::cuda::blas::mm(
+lumina::cuda::blas::mm(
     const matrix<float>& A,
     const matrix<float>& B,
           matrix<float>& C,
@@ -244,7 +244,7 @@ lm::cuda::blas::mm(
     );
 
     if (status != CUBLAS_STATUS_SUCCESS)
-        lm::log::error("CUBLAS axpy error:", cublasGetErrorString(status));
+        lumina::log::error("CUBLAS axpy error:", cublasGetErrorString(status));
 
     stream.synchronize();
 
@@ -253,7 +253,7 @@ lm::cuda::blas::mm(
 
 template <>
 void
-lm::cuda::blas::add(
+lumina::cuda::blas::add(
     const array<float>& x,
     const array<float>& y,
           array<float>& z,
@@ -270,7 +270,7 @@ lm::cuda::blas::add(
 
 template <>
 void
-lm::cuda::blas::sub(
+lumina::cuda::blas::sub(
     const array<float>& x,
     const array<float>& y,
           array<float>& z,
@@ -287,7 +287,7 @@ lm::cuda::blas::sub(
 
 template <>
 void
-lm::cuda::blas::mul(
+lumina::cuda::blas::mul(
     const array<float>& x,
     const array<float>& y,
           array<float>& z,
@@ -304,7 +304,7 @@ lm::cuda::blas::mul(
 
 template <>
 void
-lm::cuda::blas::sigmoid(
+lumina::cuda::blas::sigmoid(
     const array<float>& x,
           array<float>& y,
 
@@ -318,7 +318,7 @@ lm::cuda::blas::sigmoid(
 
 template <>
 void
-lm::cuda::blas::sigmoid_derivative(
+lumina::cuda::blas::sigmoid_derivative(
     const array<float>& x,
           array<float>& y,
 

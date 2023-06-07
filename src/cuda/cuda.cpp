@@ -26,38 +26,38 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-lm::cuda::error::error(cudaError_t error)
+lumina::cuda::error::error(cudaError_t error)
 :   _handle(error)
 {}
 
 const char*
-lm::cuda::error::describe() const
+lumina::cuda::error::describe() const
 {
     return cudaGetErrorString(_handle);
 }
 
-lm::cuda::error::operator bool() const
+lumina::cuda::error::operator bool() const
 {
     return _handle != cudaSuccess;
 }
 
-lm::cuda::error::operator cudaError_t() const
+lumina::cuda::error::operator cudaError_t() const
 {
     return _handle;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const lm::cuda::stream lm::cuda::stream::main{0};
+const lumina::cuda::stream lumina::cuda::stream::main{0};
 
-lm::cuda::stream::stream()
+lumina::cuda::stream::stream()
 {
     error status = cudaStreamCreate(&_handle);
     if (status)
         log::error("cudaStreamCreate failed:", status.describe());
 }
 
-lm::cuda::stream::~stream()
+lumina::cuda::stream::~stream()
 {
     if (*this == main)
         return;
@@ -68,31 +68,31 @@ lm::cuda::stream::~stream()
 }
 
 bool
-lm::cuda::stream::operator == (const stream& s)
+lumina::cuda::stream::operator == (const stream& s)
 {
     return _handle == s._handle;
 }
 
 bool
-lm::cuda::stream::operator != (const stream& s)
+lumina::cuda::stream::operator != (const stream& s)
 {
     return !(*this == s);
 }
 
-lm::cuda::stream::operator cudaStream_t() const
+lumina::cuda::stream::operator cudaStream_t() const
 {
     return _handle;
 }
 
 void
-lm::cuda::stream::synchronize() const
+lumina::cuda::stream::synchronize() const
 {
     error status = cudaStreamSynchronize(_handle);
     if (status)
         log::error("cudaStreamSynchronize failed:", status.describe());
 }
 
-lm::cuda::stream::stream(cudaStream_t handle)
+lumina::cuda::stream::stream(cudaStream_t handle)
 :   _handle(handle)
 {}
 
@@ -103,7 +103,7 @@ lm::cuda::stream::stream(cudaStream_t handle)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void*
-lm::cuda::malloc(size_t size)
+lumina::cuda::malloc(size_t size)
 {
     void* ptr = nullptr;
 
@@ -115,7 +115,7 @@ lm::cuda::malloc(size_t size)
 }
 
 void
-lm::cuda::free(void* ptr)
+lumina::cuda::free(void* ptr)
 {
     error status = cudaFree(ptr);
     if (status)
@@ -123,7 +123,7 @@ lm::cuda::free(void* ptr)
 }
 
 void
-lm::cuda::memcpy(void* dst, const void* src, size_t size, memcpy_kind kind)
+lumina::cuda::memcpy(void* dst, const void* src, size_t size, memcpy_kind kind)
 {
     error status = cudaMemcpy(dst, src, size, cudaMemcpyKind(kind + cudaMemcpyHostToHost));
     if (status)
@@ -131,7 +131,7 @@ lm::cuda::memcpy(void* dst, const void* src, size_t size, memcpy_kind kind)
 }
 
 void
-lm::cuda::memcpy_async(void* dst, const void* src, size_t size, memcpy_kind kind, const stream& stream)
+lumina::cuda::memcpy_async(void* dst, const void* src, size_t size, memcpy_kind kind, const stream& stream)
 {
     error status = cudaMemcpyAsync(dst, src, size, cudaMemcpyKind(kind + cudaMemcpyHostToHost), stream);
     if (status)

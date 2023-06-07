@@ -11,7 +11,7 @@
 
 #if __cplusplus >= 201703L
 
-namespace lm::slam {
+namespace lumina::slam {
 
 class sense
 {
@@ -176,6 +176,6 @@ private:
 	int _tof_fd;
 };
 
-} // namespace lm::slam
+} // namespace lumina::slam
 
 #endif

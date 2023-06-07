@@ -28,7 +28,7 @@
 
 #include "base/types.hpp"
 
-namespace lm {
+namespace lumina {
 
 template <i64 N, typename T>
 struct vec
@@ -98,4 +98,4 @@ protected:
 
 using vec3 = vec<3, float>;
 
-} // namespace lm
+} // namespace lumina

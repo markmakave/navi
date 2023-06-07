@@ -27,7 +27,7 @@
 #include "slam/kernels.hpp"
 #include "slam/pointcloud.hpp"
 
-namespace lm {
+namespace lumina {
 namespace slam {
 
 class slam
@@ -49,4 +49,4 @@ protected:
 };
 
 } // namespace slam
-} // namespace lm
+} // namespace lumina

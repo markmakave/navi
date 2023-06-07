@@ -33,7 +33,7 @@
 #include <cstring>
 #include <sstream>
 
-namespace lm {
+namespace lumina {
 
 template <typename T>
 class image : public matrix<T>
@@ -186,7 +186,7 @@ public:
 		size_type size = file.tellg();
 		file.seekg(0, std::ios::beg);
 
-		lm::array<uint8_t> buffer(size);
+		lumina::array<uint8_t> buffer(size);
 		file.read((char*)buffer.data(), size);
 
 		if (ext == "png")
@@ -227,4 +227,4 @@ public:
 	decode(const array<byte>& buffer);
 };
 
-} // namespace lm
+} // namespace lumina

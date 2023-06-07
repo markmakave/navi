@@ -28,7 +28,7 @@
 #include "util/log.hpp"
 #include "base/types.hpp"
 
-namespace lm {
+namespace lumina {
 
 template <typename T>
 class heap_allocator
@@ -128,4 +128,4 @@ public:
 	}
 };
 
-} // namespace lm
+} // namespace lumina

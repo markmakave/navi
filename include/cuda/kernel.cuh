@@ -2,7 +2,7 @@
 
 #include "util/log.hpp"
 
-namespace lm {
+namespace lumina {
 namespace cuda {
 
 template <typename... Args>
@@ -31,7 +31,7 @@ public:
         const void* arg_ptrs[sizeof...(Args)] = {&args...};
         cudaError_t status = cudaLaunchKernel((void*)_ptr, blocks, threads, (void**)arg_ptrs, 0, stream);
         if (status != cudaSuccess)
-            lm::log::error("cudaLaunchKernel failed:", cudaGetErrorString(status));
+            lumina::log::error("cudaLaunchKernel failed:", cudaGetErrorString(status));
     }
 
 private:

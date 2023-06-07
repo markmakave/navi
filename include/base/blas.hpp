@@ -7,7 +7,7 @@
 #include <cassert>
 #include <functional>
 
-namespace lm {
+namespace lumina {
 namespace blas {
 
 using size_type = int64_t;

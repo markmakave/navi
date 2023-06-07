@@ -3,10 +3,10 @@
 template <>
 __global__
 void
-lm::cuda::blas::add_kernel(
-    const lm::cuda::array<float> x,
-    const lm::cuda::array<float> y,
-          lm::cuda::array<float> z
+lumina::cuda::blas::add_kernel(
+    const lumina::cuda::array<float> x,
+    const lumina::cuda::array<float> y,
+          lumina::cuda::array<float> z
 ) {
     i64 i = threadIdx.x + blockIdx.x * blockDim.x;
     if (i >= x.size()) return;
@@ -16,10 +16,10 @@ lm::cuda::blas::add_kernel(
 template <>
 __global__
 void
-lm::cuda::blas::sub_kernel(
-    const lm::cuda::array<float> x,
-    const lm::cuda::array<float> y,
-          lm::cuda::array<float> z
+lumina::cuda::blas::sub_kernel(
+    const lumina::cuda::array<float> x,
+    const lumina::cuda::array<float> y,
+          lumina::cuda::array<float> z
 ) {
     i64 i = threadIdx.x + blockIdx.x * blockDim.x;
     if (i >= x.size()) return;
@@ -29,10 +29,10 @@ lm::cuda::blas::sub_kernel(
 template <>
 __global__
 void
-lm::cuda::blas::mul_kernel(
-    const lm::cuda::array<float> x,
-    const lm::cuda::array<float> y,
-          lm::cuda::array<float> z
+lumina::cuda::blas::mul_kernel(
+    const lumina::cuda::array<float> x,
+    const lumina::cuda::array<float> y,
+          lumina::cuda::array<float> z
 ) {
     i64 i = threadIdx.x + blockIdx.x * blockDim.x;
     if (i >= x.size()) return;
@@ -41,14 +41,14 @@ lm::cuda::blas::mul_kernel(
 
 __device__
 float
-lm::cuda::blas::sigmoid(float x)
+lumina::cuda::blas::sigmoid(float x)
 {
     return x > 0 ? x : 0;
 }
 
 __device__
 float
-lm::cuda::blas::sigmoid_derivative(float x)
+lumina::cuda::blas::sigmoid_derivative(float x)
 {
     return x > 0 ? 1 : 0;
 }
@@ -56,7 +56,7 @@ lm::cuda::blas::sigmoid_derivative(float x)
 template <>
 __global__
 void
-lm::cuda::blas::sigmoid_kernel(
+lumina::cuda::blas::sigmoid_kernel(
     const array<float> x,
           array<float> y
 ) {
@@ -68,7 +68,7 @@ lm::cuda::blas::sigmoid_kernel(
 template <>
 __global__
 void
-lm::cuda::blas::sigmoid_derivative_kernel(
+lumina::cuda::blas::sigmoid_derivative_kernel(
     const array<float> x,
           array<float> y
 ) {

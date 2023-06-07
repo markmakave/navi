@@ -29,8 +29,8 @@
 
 template <>
 template <>
-lm::array<lm::byte>
-lm::image<lm::gray>::encode<lm::image<lm::gray>::format::png>() const
+lumina::array<lumina::byte>
+lumina::image<lumina::gray>::encode<lumina::image<lumina::gray>::format::png>() const
 {
 	array<byte> buffer;
 
@@ -56,8 +56,8 @@ lm::image<lm::gray>::encode<lm::image<lm::gray>::format::png>() const
 
 template <>
 template <>
-lm::array<lm::byte>
-lm::image<bool>::encode<lm::image<bool>::format::png>() const
+lumina::array<lumina::byte>
+lumina::image<bool>::encode<lumina::image<bool>::format::png>() const
 {
 	array<byte> buffer;
 
@@ -84,7 +84,7 @@ lm::image<bool>::encode<lm::image<bool>::format::png>() const
 template <>
 template <>
 void
-lm::image<lm::gray>::decode<lm::image<lm::gray>::format::png>(const lm::array<lm::byte>& buffer)
+lumina::image<lumina::gray>::decode<lumina::image<lumina::gray>::format::png>(const lumina::array<lumina::byte>& buffer)
 {
 	std::stringstream ss;
 	ss.write((char*)buffer.data(), buffer.size());
@@ -97,23 +97,23 @@ lm::image<lm::gray>::decode<lm::image<lm::gray>::format::png>(const lm::array<lm
 		auto& img_row = img.get_row(y);
 
 		for (unsigned x = 0; x < img.get_width(); ++x)
-			(*this)(x, y) = reinterpret_cast<lm::byte&>(img_row[x]);
+			(*this)(x, y) = reinterpret_cast<lumina::byte&>(img_row[x]);
 	}
 }
 
 template <>
 template <>
 void
-lm::image<bool>::decode<lm::image<bool>::format::png>(
-	[[maybe_unused]] const lm::array<lm::byte>& buffer)
+lumina::image<bool>::decode<lumina::image<bool>::format::png>(
+	[[maybe_unused]] const lumina::array<lumina::byte>& buffer)
 {}
 
 // PNG RGB
 
 template <>
 template <>
-lm::array<lm::byte>
-lm::image<lm::rgb>::encode<lm::image<lm::rgb>::format::png>() const
+lumina::array<lumina::byte>
+lumina::image<lumina::rgb>::encode<lumina::image<lumina::rgb>::format::png>() const
 {
 	array<byte> buffer;
 
@@ -140,7 +140,7 @@ lm::image<lm::rgb>::encode<lm::image<lm::rgb>::format::png>() const
 template <>
 template <>
 void
-lm::image<lm::rgb>::decode<lm::image<lm::rgb>::format::png>(const lm::array<lm::byte>& buffer)
+lumina::image<lumina::rgb>::decode<lumina::image<lumina::rgb>::format::png>(const lumina::array<lumina::byte>& buffer)
 {
 	std::stringstream ss;
 	ss.write((char*)buffer.data(), buffer.size());
@@ -161,8 +161,8 @@ lm::image<lm::rgb>::decode<lm::image<lm::rgb>::format::png>(const lm::array<lm::
 
 template <>
 template <>
-lm::array<lm::byte>
-lm::image<lm::rgba>::encode<lm::image<lm::rgba>::format::png>() const
+lumina::array<lumina::byte>
+lumina::image<lumina::rgba>::encode<lumina::image<lumina::rgba>::format::png>() const
 {
 	array<byte> buffer;
 
@@ -189,7 +189,7 @@ lm::image<lm::rgba>::encode<lm::image<lm::rgba>::format::png>() const
 template <>
 template <>
 void
-lm::image<lm::rgba>::decode<lm::image<lm::rgba>::format::png>(const lm::array<lm::byte>& buffer)
+lumina::image<lumina::rgba>::decode<lumina::image<lumina::rgba>::format::png>(const lumina::array<lumina::byte>& buffer)
 {
 	std::stringstream ss;
 	ss.write((char*)buffer.data(), buffer.size());
@@ -215,37 +215,37 @@ lm::image<lm::rgba>::decode<lm::image<lm::rgba>::format::png>(const lm::array<lm
 
 template <>
 template <>
-lm::array<lm::byte>
-lm::image<lm::gray>::encode<lm::image<lm::gray>::format::qoi>() const
+lumina::array<lumina::byte>
+lumina::image<lumina::gray>::encode<lumina::image<lumina::gray>::format::qoi>() const
 {
-	lm::log::error("image<gray>::encode<qoi> not implemented");
+	lumina::log::error("image<gray>::encode<qoi> not implemented");
 	return {};
 }
 
 template <>
 template <>
-lm::array<lm::byte>
-lm::image<bool>::encode<lm::image<bool>::format::qoi>() const
+lumina::array<lumina::byte>
+lumina::image<bool>::encode<lumina::image<bool>::format::qoi>() const
 {
-	lm::log::error("image<gray>::encode<qoi> not implemented");
+	lumina::log::error("image<gray>::encode<qoi> not implemented");
 	return {};
 }
 
 template <>
 template <>
 void
-lm::image<lm::gray>::decode<lm::image<lm::gray>::format::qoi>(
-	[[maybe_unused]] const lm::array<lm::byte>& buffer)
+lumina::image<lumina::gray>::decode<lumina::image<lumina::gray>::format::qoi>(
+	[[maybe_unused]] const lumina::array<lumina::byte>& buffer)
 {
-	lm::log::error("image<gray>::decode<qoi> not implemented");
+	lumina::log::error("image<gray>::decode<qoi> not implemented");
 }
 
 // QOI RGB
 
 template <>
 template <>
-lm::array<lm::byte>
-lm::image<lm::rgb>::encode<lm::image<lm::rgb>::format::qoi>() const
+lumina::array<lumina::byte>
+lumina::image<lumina::rgb>::encode<lumina::image<lumina::rgb>::format::qoi>() const
 {
 	qoi_desc desc;
 	desc.width		= _shape[0];
@@ -266,7 +266,7 @@ lm::image<lm::rgb>::encode<lm::image<lm::rgb>::format::qoi>() const
 template <>
 template <>
 void
-lm::image<lm::rgb>::decode<lm::image<lm::rgb>::format::qoi>(const lm::array<lm::byte>& buffer)
+lumina::image<lumina::rgb>::decode<lumina::image<lumina::rgb>::format::qoi>(const lumina::array<lumina::byte>& buffer)
 {
 	qoi_desc desc = {};
 	void*	 ptr  = qoi_decode(buffer.data(), buffer.size(), &desc, 0);
@@ -292,8 +292,8 @@ lm::image<lm::rgb>::decode<lm::image<lm::rgb>::format::qoi>(const lm::array<lm::
 
 template <>
 template <>
-lm::array<lm::byte>
-lm::image<lm::rgba>::encode<lm::image<lm::rgba>::format::qoi>() const
+lumina::array<lumina::byte>
+lumina::image<lumina::rgba>::encode<lumina::image<lumina::rgba>::format::qoi>() const
 {
 	qoi_desc desc;
 	desc.width		= _shape[0];
@@ -314,8 +314,8 @@ lm::image<lm::rgba>::encode<lm::image<lm::rgba>::format::qoi>() const
 template <>
 template <>
 void
-lm::image<lm::rgba>::decode<lm::image<lm::rgba>::format::qoi>(
-	[[maybe_unused]] const lm::array<lm::byte>& buffer)
+lumina::image<lumina::rgba>::decode<lumina::image<lumina::rgba>::format::qoi>(
+	[[maybe_unused]] const lumina::array<lumina::byte>& buffer)
 {}
 
 //

@@ -31,7 +31,7 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
-namespace lm {
+namespace lumina {
 namespace slam {
 
 class device
@@ -77,4 +77,4 @@ protected:
 };
 
 } // namespace slam
-} // namespace lm
+} // namespace lumina

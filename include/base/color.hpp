@@ -30,7 +30,7 @@
 
 #include "base/types.hpp"
 
-namespace lm {
+namespace lumina {
 
 template <int lower, int higher>
 static int
@@ -147,4 +147,4 @@ struct rgba : rgb
 	}
 };
 
-} // namespace lm
+} // namespace lumina

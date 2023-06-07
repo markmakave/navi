@@ -3,7 +3,7 @@
 template <>
 __global__
 void
-lm::cuda::distort(
+lumina::cuda::distort(
     const matrix<rgb> in,
     const __half      k1,
     const __half      k2, 
@@ -44,7 +44,7 @@ lm::cuda::distort(
 template <>
 __global__
 void
-lm::cuda::distort(
+lumina::cuda::distort(
     const matrix<rgba> in,
     const __half       k1,
     const __half       k2, 

@@ -29,7 +29,6 @@ func main() {
 			
 			log.Println("connected")
 			
-			id := 0
 			for {
 				// generate random point coordinates in spherical coordinates 
 				r := rand.Float64()
@@ -40,17 +39,12 @@ func main() {
 				y := r * math.Sin(theta) * math.Sin(phi)
 				z := r * math.Cos(theta)
 
-				json := fmt.Sprintf(`{"id": %d, "x": %f, "y": %f, "z": %f}`, id, x, y, z)
+				json := fmt.Sprintf(`{"x": %f, "y": %f, "z": %f}`, x, y, z)
 
 				err := ws.WriteMessage(websocket.TextMessage, []byte(json))
 				if err != nil {
 					log.Println(err)
-					return
-				}
-				
-				id++
-				if id == 10000 {
-					id = 0
+					break
 				}
 			}
 

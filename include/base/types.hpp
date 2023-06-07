@@ -26,7 +26,7 @@
 
 #include <cstdint>
 
-namespace lm {
+namespace lumina {
 
 using i8  = int8_t;
 using i16 = int16_t;
@@ -52,4 +52,4 @@ using word	= u16;
 using dword = u32;
 using qword = u64;
 
-} // namespace lm
+} // namespace lumina

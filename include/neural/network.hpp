@@ -31,7 +31,7 @@
 #include <cassert>
 #include <random>
 
-namespace lm {
+namespace lumina {
 namespace neural {
 
 inline float
@@ -268,4 +268,4 @@ protected:
 };
 
 } // namespace neural
-} // namespace lm
+} // namespace lumina

@@ -27,7 +27,7 @@
 #include "cuda/matrix.cuh"
 #include "base/color.hpp"
 
-namespace lm {
+namespace lumina {
 namespace cuda {
 
 static

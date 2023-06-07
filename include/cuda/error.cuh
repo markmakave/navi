@@ -1,6 +1,6 @@
 #pragma once
 
-namespace lm {
+namespace lumina {
 namespace cuda {
 
 class error

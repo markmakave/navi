@@ -29,9 +29,9 @@
 #include <sstream>
 #include <thread>
 
-namespace lm {
+namespace lumina {
 
-#define LM_PROFILE(name) if (auto _ = lm::profiler::record(name))
+#define LM_PROFILE(name) if (auto _ = lumina::profiler::record(name))
 
 class profiler
 {

@@ -26,7 +26,7 @@
 
 #include "base/tensor.hpp"
 
-namespace lm {
+namespace lumina {
 namespace cuda {
 
 template <i64 N>
@@ -59,7 +59,7 @@ public:
     }
 
     __host__ __device__
-    shape_t(const lm::shape_t<N>& s)
+    shape_t(const lumina::shape_t<N>& s)
     {
         for (size_type n = 0; n < N; ++n)
             _data[n] = s[n];
@@ -116,9 +116,9 @@ public:
     }
 
     __host__ __device__
-    operator lm::shape_t<N>() const
+    operator lumina::shape_t<N>() const
     {
-        lm::shape_t<N> s;
+        lumina::shape_t<N> s;
         for (size_type n = 0; n < N; ++n)
             s[n] = _data[n];
         return s;
@@ -548,7 +548,7 @@ public:
     template <typename U, typename alloc>
     __host__
     void
-    operator << (const lm::tensor<N, U, alloc>& t)
+    operator << (const lumina::tensor<N, U, alloc>& t)
     {
         static_assert(sizeof(T) == sizeof(U));
         reshape(shape_type(t.shape()));
@@ -558,10 +558,10 @@ public:
     template <typename U, typename alloc>
     __host__
     void
-    operator >> (lm::tensor<N, U, alloc>& t) const
+    operator >> (lumina::tensor<N, U, alloc>& t) const
     {
         static_assert(sizeof(T) == sizeof(U));
-        t.reshape(_shape.operator lm::shape_t<N>());
+        t.reshape(_shape.operator lumina::shape_t<N>());
         memcpy(t.data(), _data, size() * sizeof(T), D2H);
     }
 

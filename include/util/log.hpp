@@ -28,7 +28,7 @@
 #include <chrono>
 #include <ctime>
 
-namespace lm {
+namespace lumina {
 
 class log
 {
@@ -135,12 +135,12 @@ private:
 
 };
 
-#define INFO(...)    lm::log::info(__VA_ARGS__)
-#define WARNING(...) lm::log::warning(__VA_ARGS__)
-#define ERROR(...)   lm::log::error(__VA_ARGS__)
+#define INFO(...)    lumina::log::info(__VA_ARGS__)
+#define WARNING(...) lumina::log::warning(__VA_ARGS__)
+#define ERROR(...)   lumina::log::error(__VA_ARGS__)
 
 #ifndef NDEBUG
-#define DEBUG(...)   lm::log::debug(__VA_ARGS__)
+#define DEBUG(...)   lumina::log::debug(__VA_ARGS__)
 #else
 #define DEBUG(...) {}
 #endif
