@@ -37,8 +37,8 @@ descript(
     const brief<256>                     engine,
           matrix<brief<256>::descriptor> descriptors
 ) {
-    unsigned x = threadIdx.x + blockIdx.x * blockDim.x;
-    unsigned y = threadIdx.y + blockIdx.y * blockDim.y;
+    const unsigned x = threadIdx.x + blockIdx.x * blockDim.x;
+    const unsigned y = threadIdx.y + blockIdx.y * blockDim.y;
 
     if (x >= image.shape()[0] - 3 || y >= image.shape()[1] - 3 || x < 3 || y < 3)
         return;

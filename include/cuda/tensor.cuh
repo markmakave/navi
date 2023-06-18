@@ -1,24 +1,24 @@
-/* 
+/*
 
     Copyright (c) 2023 Mokhov Mark
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
+    of this software and associated documentation files (the "Software"), to
+   deal in the Software without restriction, including without limitation the
+   rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+   sell copies of the Software, and to permit persons to whom the Software is
     furnished to do so, subject to the following conditions:
 
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
+    The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Software.
 
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-    SOFTWARE.
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+   IN THE SOFTWARE.
 
 */
 
@@ -40,13 +40,13 @@ public:
 
     __host__ __device__
     shape_t()
-    :   _data{}
+      : _data {}
     {}
 
     template <typename... Size>
     __host__ __device__
-    shape_t(Size ...sizes)
-    :   _data{static_cast<size_type>(sizes)...}
+    shape_t(Size... sizes)
+      : _data {static_cast<size_type>(sizes)...}
     {
         static_assert(sizeof...(Size) == N);
     }
@@ -65,18 +65,16 @@ public:
             _data[n] = s[n];
     }
 
-    __host__ __device__
-    shape_t&
-    operator = (const shape_t& s)
+    __host__ __device__ shape_t&
+    operator= (const shape_t& s)
     {
         for (size_type n = 0; n < N; ++n)
             _data[n] = s._data[n];
         return *this;
     }
 
-    __host__ __device__
-    bool
-    operator == (const shape_t& s) const
+    __host__ __device__ bool
+    operator== (const shape_t& s) const
     {
         for (size_type n = 0; n < N; ++n)
             if (_data[n] != s[n])
@@ -84,29 +82,25 @@ public:
         return true;
     }
 
-    __host__ __device__
-    bool
-    operator != (const shape_t& s) const
+    __host__ __device__ bool
+    operator!= (const shape_t& s) const
     {
         return !((*this) == s);
     }
 
-    __host__ __device__
-    size_type&
-    operator [] (size_type dim)
+    __host__ __device__ size_type&
+    operator[] (size_type dim)
     {
         return _data[dim];
     }
 
-    __host__ __device__
-    const size_type&
-    operator [] (size_type dim) const
+    const __host__ __device__ size_type&
+    operator[] (size_type dim) const
     {
         return _data[dim];
     }
 
-    __host__ __device__
-    size_type
+    __host__ __device__ size_type
     size() const
     {
         size_type s = 1;
@@ -115,8 +109,7 @@ public:
         return s;
     }
 
-    __host__ __device__
-    operator lumina::shape_t<N>() const
+    __host__ __device__ operator lumina::shape_t<N> () const
     {
         lumina::shape_t<N> s;
         for (size_type n = 0; n < N; ++n)
@@ -129,33 +122,33 @@ protected:
     size_type _data[N];
 };
 
-template <i64 N, typename T, typename _alloc>
+template <i64 N, typename T, typename _alloc = device_allocator<T>>
 class tensor
 {
 public:
 
-    using value_type        = T;
-    using pointer           = value_type*;
-    using const_pointer     = const value_type*;
-    using reference         = value_type&;
-    using const_reference   = const value_type&;
-    using iterator          = pointer;
-    using const_iterator    = const_pointer;
-    using shape_type        = shape_t<N>;
-    using size_type         = typename shape_type::size_type;
+    using value_type      = T;
+    using pointer         = value_type*;
+    using const_pointer   = const value_type*;
+    using reference       = value_type&;
+    using const_reference = const value_type&;
+    using iterator        = pointer;
+    using const_iterator  = const_pointer;
+    using shape_type      = shape_t<N>;
+    using size_type       = typename shape_type::size_type;
 
 public:
 
     __host__ __device__
     tensor()
-    :   _data(nullptr),
+      : _data(nullptr),
         _shape()
     {}
-    
+
     template <typename... Size>
     __host__ __device__
-    tensor(Size ...sizes)
-    :   _data(nullptr),
+    tensor(Size... sizes)
+      : _data(nullptr),
         _shape()
     {
         reshape(sizes...);
@@ -163,7 +156,7 @@ public:
 
     __host__ __device__
     tensor(const shape_type& shape)
-    :   _data(nullptr),
+      : _data(nullptr),
         _shape()
     {
         reshape(shape);
@@ -171,26 +164,26 @@ public:
 
     __host__ __device__
     tensor(const tensor& t)
-    :   _data(nullptr),
+      : _data(nullptr),
         _shape()
     {
         reshape(t.shape());
-        _alloc::copy(t._data, _data, size()); 
+        _alloc::copy(t._data, _data, size());
     }
 
     __host__ __device__
     tensor(tensor&& t)
-    :   _data(t._data),
+      : _data(t._data),
         _shape(t._shape)
     {
-        t._data = nullptr;
+        t._data  = nullptr;
         t._shape = shape_type();
     }
 
     template <typename U, typename alloc>
     __host__ __device__
     tensor(const tensor<N, U, alloc>& t)
-    :   _data(nullptr),
+      : _data(nullptr),
         _shape()
     {
         reshape(t.shape());
@@ -203,12 +196,10 @@ public:
         _deallocate();
     }
 
-    __host__ __device__
-    tensor&
-    operator = (const tensor& t)
+    __host__ __device__ tensor&
+    operator= (const tensor& t)
     {
-        if (&t != this)
-        {
+        if (&t != this) {
             reshape(t._shape);
             _alloc::copy(t._data, _data, t.size() * sizeof(value_type));
         }
@@ -216,16 +207,14 @@ public:
         return *this;
     }
 
-    __host__ __device__
-    tensor&
-    operator = (tensor&& t)
+    __host__ __device__ tensor&
+    operator= (tensor&& t)
     {
-        if (&t != this)
-        {
-            _data = t._data;
+        if (&t != this) {
+            _data  = t._data;
             _shape = t._shape;
 
-            t._data = nullptr;
+            t._data  = nullptr;
             t._shape = shape_type();
         }
 
@@ -233,9 +222,8 @@ public:
     }
 
     template <typename U, typename alloc>
-    __host__ __device__
-    tensor&
-    operator = (const tensor<N, U, alloc>& t)
+    __host__ __device__ tensor&
+    operator= (const tensor<N, U, alloc>& t)
     {
         reshape(t.shape());
         for (size_type i = 0; i < t.size(); ++i)
@@ -244,46 +232,40 @@ public:
         return *this;
     }
 
-    __host__ __device__
-    void
+    __host__ __device__ void
     fill(const_reference fillament)
     {
         for (size_type i = 0; i < size(); ++i)
             _alloc::access(_data + i) = fillament;
     }
 
-    __host__ __device__
-    const shape_type&
+    const __host__ __device__ shape_type&
     shape() const
     {
         return _shape;
     }
 
-    __host__ __device__
-    pointer
+    __host__ __device__ pointer
     data()
     {
         return _data;
     }
 
-    __host__ __device__
-    const_pointer
+    __host__ __device__ const_pointer
     data() const
     {
         return _data;
     }
 
-    __host__ __device__
-    size_type
+    __host__ __device__ size_type
     size() const
     {
         return _shape.size();
     }
 
     template <typename... Size>
-    __host__ __device__
-    void
-    reshape(Size ...sizes)
+    __host__ __device__ void
+    reshape(Size... sizes)
     {
         static_assert(sizeof...(Size) == N);
 
@@ -291,8 +273,7 @@ public:
         reshape(new_shape);
     }
 
-    __host__ __device__
-    void
+    __host__ __device__ void
     reshape(const shape_type& shape)
     {
         if (_shape == shape)
@@ -303,14 +284,12 @@ public:
         _allocate();
     }
 
-    __host__ __device__
-    decltype(auto)
-    operator () (size_type indices[N])
+    __host__ __device__ decltype(auto)
+             operator() (size_type indices[N])
     {
         size_type offset = 0;
-        size_type dim = 1;
-        for (size_type n = 0; n < N; ++n)
-        {
+        size_type dim    = 1;
+        for (size_type n = 0; n < N; ++n) {
             offset += dim * indices[n];
             dim *= _shape[n];
         }
@@ -318,14 +297,12 @@ public:
         return _alloc::access(_data + offset);
     }
 
-    __host__ __device__
-    decltype(auto)
-    operator () (size_type indices[N]) const
+    __host__ __device__ decltype(auto)
+             operator() (size_type indices[N]) const
     {
         size_type offset = 0;
-        size_type dim = 1;
-        for (size_type n = 0; n < N; ++n)
-        {
+        size_type dim    = 1;
+        for (size_type n = 0; n < N; ++n) {
             offset += dim * indices[n];
             dim *= _shape[n];
         }
@@ -334,9 +311,8 @@ public:
     }
 
     template <typename... Index>
-    __host__ __device__
-    decltype(auto)
-    operator () (Index ...index)
+    __host__ __device__ decltype(auto)
+             operator() (Index... index)
     {
         static_assert(sizeof...(Index) == N);
 
@@ -346,9 +322,8 @@ public:
     }
 
     template <typename... Index>
-    __host__ __device__
-    decltype(auto)
-    operator () (Index ...index) const
+    __host__ __device__ decltype(auto)
+             operator() (Index... index) const
     {
         static_assert(sizeof...(Index) == N);
 
@@ -357,100 +332,86 @@ public:
         return (*this)(indices);
     }
 
-    #if __cplusplus >= 202002L
+#if __cplusplus >= 202002L
 
     template <typename... Index>
-    __host__ __device__
-    decltype(auto)
-    operator [] (Index ...index)
+    __host__ __device__ decltype(auto)
+             operator[] (Index... index)
     {
-        return operator()(index...);
+        return operator() (index...);
     }
 
     template <typename... Index>
-    __host__ __device__
-    decltype(auto)
-    operator [] (Index ...index) const
+    __host__ __device__ decltype(auto)
+             operator[] (Index... index) const
     {
-        return operator()(index...);
+        return operator() (index...);
     }
 
-    #endif
+#endif
 
-    __host__ __device__
-    decltype(auto)
-    operator [] (size_type index)
+    __host__ __device__ decltype(auto)
+             operator[] (size_type index)
     {
         return _alloc::access(_data + index);
     }
 
-    __host__ __device__
-    decltype(auto)
-    operator [] (size_type index) const
+    __host__ __device__ decltype(auto)
+             operator[] (size_type index) const
     {
         return _alloc::access(_data + index);
     }
 
-    __host__ __device__
-    decltype(auto)
-    front()
+    __host__ __device__ decltype(auto)
+             front()
     {
         return _alloc::access(_data + 0);
     }
 
-    __host__ __device__
-    decltype(auto)
-    front() const
+    __host__ __device__ decltype(auto)
+             front() const
     {
         return _alloc::access(_data + 0);
     }
 
-    __host__ __device__
-    decltype(auto)
-    back()
+    __host__ __device__ decltype(auto)
+             back()
     {
         return _alloc::access(_data + size() - 1);
     }
 
-    __host__ __device__
-    decltype(auto)
-    back() const
+    __host__ __device__ decltype(auto)
+             back() const
     {
         return _alloc::access(_data + size() - 1);
     }
 
-    __host__ __device__
-    iterator
+    __host__ __device__ iterator
     begin()
     {
         return _data;
     }
 
-    __host__ __device__
-    const_iterator
+    __host__ __device__ const_iterator
     begin() const
     {
         return _data;
     }
 
-    __host__ __device__
-    iterator
+    __host__ __device__ iterator
     end()
     {
         return _data + size();
     }
 
-    __host__ __device__
-    const_iterator
+    __host__ __device__ const_iterator
     end() const
     {
         return _data + size();
     }
 
-    __host__
-    friend
-    std::ostream&
-    operator << (std::ostream& out, const tensor& t)
+    __host__ friend std::ostream&
+    operator<< (std::ostream& out, const tensor& t)
     {
         out << "Tensor<" << typeid(value_type).name() << "> " << t._shape[0];
         for (size_type n = 1; n < N; ++n)
@@ -467,17 +428,14 @@ public:
         size_type index[N] = {};
 
         std::function<void(size_type)> print;
-        print = [&](size_type dim){
-            if (dim == 0)
-            {
-                for (size_type n = 0; n < t.shape()[0]; ++n)
-                {
+        print = [&](size_type dim) {
+            if (dim == 0) {
+                for (size_type n = 0; n < t.shape()[0]; ++n) {
                     index[0] = n;
                     out << std::setw(number_length + 1) << t(index) << ' ';
                 }
             } else {
-                for (size_type n = 0; n < t.shape()[dim]; ++n)
-                {
+                for (size_type n = 0; n < t.shape()[dim]; ++n) {
                     index[dim] = n;
 
                     if (n != 0)
@@ -500,8 +458,8 @@ public:
         return out;
     }
 
-    __host__
-    void write(std::ofstream& file) const
+    __host__ void
+    write(std::ofstream& file) const
     {
         size_type order = N;
         file.write((char*)&order, sizeof(order));
@@ -511,16 +469,14 @@ public:
         file.write((char*)_data, size() * sizeof(value_type));
     }
 
-    __host__
-    void
+    __host__ void
     write(const char* filename) const
     {
         std::ofstream file(filename);
         write(file);
     }
 
-    __host__
-    void
+    __host__ void
     read(std::ifstream& file)
     {
         size_type order;
@@ -537,8 +493,7 @@ public:
         file.read((char*)_data, size() * sizeof(value_type));
     }
 
-    __host__
-    void
+    __host__ void
     read(const char* filename)
     {
         std::ifstream file(filename);
@@ -546,9 +501,8 @@ public:
     }
 
     template <typename U, typename alloc>
-    __host__
-    void
-    operator << (const lumina::tensor<N, U, alloc>& t)
+    __host__ void
+    operator<< (const lumina::tensor<N, U, alloc>& t)
     {
         static_assert(sizeof(T) == sizeof(U));
         reshape(shape_type(t.shape()));
@@ -556,36 +510,33 @@ public:
     }
 
     template <typename U, typename alloc>
-    __host__
-    void
-    operator >> (lumina::tensor<N, U, alloc>& t) const
+    __host__ void
+    operator>> (lumina::tensor<N, U, alloc>& t) const
     {
         static_assert(sizeof(T) == sizeof(U));
-        t.reshape(_shape.operator lumina::shape_t<N>());
+        t.reshape(_shape.operator lumina::shape_t<N> ());
         memcpy(t.data(), _data, size() * sizeof(T), D2H);
     }
 
 protected:
 
-    pointer   _data;
+    pointer    _data;
     shape_type _shape;
 
 protected:
 
-    __host__ __device__
-    void
+    __host__ __device__ void
     _allocate()
     {
         _data = _alloc::allocate(size());
     }
 
-    __host__ __device__
-    void
+    __host__ __device__ void
     _deallocate()
     {
         _alloc::deallocate(_data);
     }
 };
 
-}
-}
+} // namespace cuda
+} // namespace lumina

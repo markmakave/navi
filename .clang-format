@@ -10,6 +10,7 @@ Standard : Cpp11
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never
+ColumnLimit: 0
 
 PointerAlignment: Left
 ReferenceAlignment: Left
@@ -81,9 +82,5 @@ SpacesInCStyleCastParentheses: false
 SpacesInContainerLiterals: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
-
-SpaceBeforeParens: Custom
-SpaceBeforeParensOptions:
-  AfterOverloadedOperator: true
 
 InsertNewlineAtEOF: true

@@ -1,24 +1,24 @@
-/* 
+/*
 
     Copyright (c) 2023 Mokhov Mark
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
+    of this software and associated documentation files (the "Software"), to
+   deal in the Software without restriction, including without limitation the
+   rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+   sell copies of the Software, and to permit persons to whom the Software is
     furnished to do so, subject to the following conditions:
 
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
+    The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Software.
 
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-    SOFTWARE.
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+   IN THE SOFTWARE.
 
 */
 
@@ -35,37 +35,28 @@
 namespace lumina {
 namespace cuda {
 
-__global__
-void
-detect(
-    const matrix<lumina::gray> image, 
-    const int              threshold,
-          matrix<bool>     features
-);
+__global__ void
+detect(const matrix<lumina::gray> image,
+       const int                  threshold,
+       matrix<bool>               features);
 
-__global__
-void
-descript(
-    const matrix<gray>                   image, 
-    const matrix<bool>                   features,
-    const brief<256>                     engine,
-          matrix<brief<256>::descriptor> descriptors
-);
+__global__ void
+descript(const matrix<gray>             image,
+         const matrix<bool>             features,
+         const brief<256>               engine,
+         matrix<brief<256>::descriptor> descriptors);
 
 template <typename T>
-__global__
-void
-distort(
-    const matrix<T> in,
-    const __half    k1,
-    const __half    k2, 
-    const __half    k3,
-          matrix<T> out
-);
+__global__ void
+distort(const matrix<T> in,
+        const __half    k1,
+        const __half    k2,
+        const __half    k3,
+        matrix<T>       out);
 
-__global__
-void
-test(tensor<1, int, device_allocator<int>>);
+template <i64 N, typename T, typename K, typename U>
+__global__ void
+convolve(const tensor<N, T> in, const tensor<N, K> kernel, tensor<N, U> out);
 
-}
-}
+} // namespace cuda
+} // namespace lumina

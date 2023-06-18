@@ -7,37 +7,43 @@ namespace cuda {
 
 template <typename... Args>
 class kernel
-{   
+{
 public:
 
     __host__
-    kernel(void(*f)(Args...))
-    :   _ptr(f)
+    kernel(void (*f)(Args...))
+      : _ptr(f)
     {}
 
-    __host__
-    auto
-    bind(dim3 blocks, dim3 threads, const stream& stream) const
+    __host__ auto
+    bind(dim3          blocks,
+         dim3          threads,
+         const stream& stream,
+         size_t        shared = 0) const
     {
-        return [this, blocks, threads, &stream](const Args&... args) {
-            return operator()(blocks, threads, stream, args...);
+        return [this, blocks, threads, &stream, shared](const Args&... args) {
+            return operator()(blocks, threads, stream, shared, args...);
         };
     }
 
-    __host__
-    void
-    operator () (dim3 blocks, dim3 threads, const stream& stream, const Args&... args) const
+    __host__ void
+    operator()(dim3          blocks,
+               dim3          threads,
+               const stream& stream,
+               size_t        shared,
+               const Args&... args) const
     {
         const void* arg_ptrs[sizeof...(Args)] = {&args...};
-        cudaError_t status = cudaLaunchKernel((void*)_ptr, blocks, threads, (void**)arg_ptrs, 0, stream);
+        cudaError_t status                    = cudaLaunchKernel(
+            (void*)_ptr, blocks, threads, (void**)arg_ptrs, shared, stream);
         if (status != cudaSuccess)
             lumina::log::error("cudaLaunchKernel failed:", cudaGetErrorString(status));
     }
 
 private:
 
-    void(*_ptr)(Args...);
+    void (*_ptr)(Args...);
 };
 
-}
-}
+} // namespace cuda
+} // namespace lumina
