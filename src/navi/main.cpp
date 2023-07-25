@@ -64,6 +64,7 @@ main(int argc, char** argv)
     }
 
     d_result >> image;
+#pragma omp parallel for
     for (int i = 0; i < image.shape()[0]; ++i)
         for (int j = 0; j < image.shape()[1]; ++j) {
             raw(i, j).r = image(i, j, 0);

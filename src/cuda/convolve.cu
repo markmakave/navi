@@ -34,19 +34,14 @@ convolve(const tensor<N, T> in, const tensor<N, K> kernel, tensor<N, U> out)
 
         for (int kz = -kz_half; kz <= kz_half; ++kz) {
             int iz_index = (z + kz) * in.shape()[0] * in.shape()[1];
-            // int kz_index =
-            //     (kz + kz_half) * kernel.shape()[0] * kernel.shape()[1];
 
             for (int ky = -ky_half; ky <= ky_half; ++ky) {
                 int iyz_index = (y + ky) * in.shape()[0] + iz_index;
-                // int kyz_index = (ky + ky_half) * kernel.shape()[1] + kz_index;
 
                 for (int kx = -kx_half; kx <= kx_half; ++kx) {
                     int ix_index = (x + kx);
-                    // int kx_index = (kx + kx_half);
 
-                    auto in_value = in[iyz_index + ix_index];
-                    // auto kernel_value = kernel_cache[kyz_index + kx_index];
+                    auto in_value     = in[iyz_index + ix_index];
                     auto kernel_value = kernel_cache[k_index++];
 
                     accum += in_value * kernel_value;

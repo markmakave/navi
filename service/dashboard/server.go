@@ -14,7 +14,7 @@ import (
 func main() {
 	m := autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
-		HostPolicy: autocert.HostWhitelist("markmakave.com"),
+		HostPolicy: autocert.HostWhitelist("markmakave.com", "onnx.tech"),
 		Cache:      autocert.DirCache("certs"),
 	}
 
