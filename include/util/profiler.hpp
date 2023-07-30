@@ -1,4 +1,4 @@
-/* 
+/*
 
     Copyright (c) 2023 Mokhov Mark
 
@@ -28,6 +28,8 @@
 #include <chrono>
 #include <sstream>
 #include <thread>
+#include <mutex>
+#include <cstring>
 
 namespace lumina {
 
@@ -35,9 +37,15 @@ namespace lumina {
 
 class profiler
 {
+    struct event
+    {
+        std::thread::id tid;
+        int64_t         begin, duration;
+        char            name[128];
+    };
 
-    static inline std::ofstream file;
-    static inline std::chrono::high_resolution_clock::time_point start;
+    static inline std::vector<event> _events;
+    static inline std::mutex         _mutex;
 
     class timer
     {
@@ -50,68 +58,80 @@ class profiler
             return true;
         }
 
-        ~timer() {
+        ~timer()
+        {
             end = std::chrono::high_resolution_clock::now();
             profiler::note(*this);
         }
 
     private:
 
-        timer(const std::string& scope_name) : scope_name(scope_name) {
+        timer(const char* name)
+          : name(name)
+        {
             begin = std::chrono::high_resolution_clock::now();
             std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+        }
+
+        auto
+        elapsed() const
+        {
+            return std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin).count();
         }
 
     private:
 
         std::chrono::high_resolution_clock::time_point begin, end;
-        const std::string scope_name;
+        const char*                                    name;
     };
 
-    static
-    void
-    note(const timer& t) {
-        auto ts = std::chrono::duration_cast<std::chrono::microseconds>(t.begin - start).count();
-        auto dur = std::chrono::duration_cast<std::chrono::microseconds>(t.end - t.begin).count();
+    static void
+    note(const timer& t)
+    {
+        std::lock_guard<std::mutex> lock(_mutex);
 
-        std::stringstream ss;
-        ss << "{ \"pid\":1, \"tid\":1, ";
-        ss << "\"ts\":" << ts << ", ";
-        ss << "\"dur\":" << dur << ", ";
-        ss << "\"ph\":\"X\", ";
-        ss << "\"name\":\"" << t.scope_name << "\" }, ";
+        event e;
+        e.tid      = std::this_thread::get_id();
+        e.begin    = t.begin.time_since_epoch().count();
+        e.duration = t.elapsed();
+        std::strncpy(e.name, t.name, sizeof(e.name) - 1);
 
-        auto str = ss.str();
-        file.write(str.c_str(), str.size());
+        _events.push_back(e);
     }
 
     profiler() {};
 
 public:
 
-    static 
-    void
-    begin(const std::string& filename) {
-        file = std::ofstream(filename);
-        start = std::chrono::high_resolution_clock::now();
+    static void
+    begin()
+    {}
 
-        file.write("{ \"traceEvents\": [ ", 19);
+    static timer
+    record(const char* scope_name)
+    {
+        return {scope_name};
     }
 
-    static
-    timer
-    record(const std::string& scope_name) {
-        return { scope_name };
-    }
+    static void
+    stage(const char* filename)
+    {
+        std::ofstream     file(filename);
+        std::stringstream ss;
 
-    static
-    void
-    end() {
-        file.seekp(-2, std::ios::cur);
-        file.write(" ] }", 4);
-        file.close();
-    }
+        ss << "{ \"traceEvents\": [ ";
+        for (auto& e : _events) {
+            ss << "{ \"tid\": " << e.tid << ", ";
+            ss << "\"name\":\"" << e.name << "\", ";
+            ss << "\"ph\":\"X\", ";
+            ss << "\"ts\":" << e.begin/1000 << ", ";
+            ss << "\"dur\":" << e.duration/1000 << " }, ";
+        }
+        ss.seekp(-2, std::ios::cur);
+        ss << "]}";
 
+        file << ss.str();
+    }
 };
 
-}
+} // namespace lumina

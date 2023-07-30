@@ -4,7 +4,7 @@ project(lumina LANGUAGES C CXX CUDA)
 
 find_package(PNG REQUIRED)
 
-set(CMAKE_CXX_FLAGS "-std=c++20 -O3 -Wall -Wextra")
+set(CMAKE_CXX_FLAGS "-std=c++20 -O3 -Wall -Wextra -fopenmp")
 include_directories(
     .
     include

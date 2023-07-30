@@ -11,13 +11,15 @@
 using namespace lumina;
 
 #define N 7
-#define ITERATIONS 1
+#define ITERATIONS 100
 
 int
 main(int argc, char** argv)
 {
     image<rgb>      raw(argv[1]);
     tensor<3, byte> image(raw.shape()[0], raw.shape()[1], 3);
+
+    LM_PROFILE("Channel transform")
     for (int i = 0; i < raw.shape()[0]; ++i)
         for (int j = 0; j < raw.shape()[1]; ++j) {
             image(i, j, 0) = raw(i, j).r;
@@ -26,6 +28,8 @@ main(int argc, char** argv)
         }
 
     cuda::tensor<3, byte> d_image;
+
+    LM_PROFILE("Transfer H2D")
     d_image << image;
 
     cuda::tensor<3, float> d_kernel(3, 3, 1);
@@ -55,16 +59,21 @@ main(int argc, char** argv)
     cuda::stream::main.synchronize();
 
     {
-        lumina::timer timer("compute", ITERATIONS);
-
+        LM_PROFILE("Workload")
         for (int i = 0; i < ITERATIONS; ++i) {
-            convolve_launchable(d_image, d_kernel, d_result);
-            cuda::stream::main.synchronize();
+            LM_PROFILE("Convolve")
+            {
+                convolve_launchable(d_image, d_kernel, d_result);
+                cuda::stream::main.synchronize();
+            }
         }
     }
 
+    LM_PROFILE("Transfer D2H")
     d_result >> image;
-#pragma omp parallel for
+
+    LM_PROFILE("Channel transform")
+    #pragma omp parallel for
     for (int i = 0; i < image.shape()[0]; ++i)
         for (int j = 0; j < image.shape()[1]; ++j) {
             raw(i, j).r = image(i, j, 0);
@@ -73,4 +82,6 @@ main(int argc, char** argv)
         }
 
     raw.write("convolve.png");
+
+    profiler::stage("trace.json");
 }
