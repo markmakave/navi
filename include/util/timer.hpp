@@ -27,28 +27,22 @@
 #include <iostream>
 #include <chrono>
 
-#include <util/log.hpp>
-
 namespace lumina {
 
 class timer {
 public:
 
-    timer(const std::string& name, int iterations = 1)
+    timer(const std::string& name)
     :   _begin(std::chrono::high_resolution_clock::now()),
-        _name(name),
-        _iterations(iterations)
+        _name(name)
     {}
-
-    ~timer() {
+    
+    double
+    elapsed() {
         auto end = std::chrono::high_resolution_clock::now();
         auto difference = std::chrono::duration_cast<std::chrono::nanoseconds>(end - _begin).count();
         double seconds = difference /  1000000000.0;
-
-        if (_iterations == 1)
-            lumina::log::info(_name, "done in", seconds, "seconds");
-        else 
-            lumina::log::info(_name, "iteration average time is", seconds / _iterations, "seconds");
+        return seconds;
     }
 
 private:

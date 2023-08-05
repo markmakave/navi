@@ -27,6 +27,7 @@
 #include <fstream>
 #include <chrono>
 #include <sstream>
+#include <vector>
 #include <thread>
 #include <mutex>
 #include <cstring>
