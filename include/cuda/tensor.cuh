@@ -30,7 +30,7 @@ namespace lumina {
 namespace cuda {
 
 template <i64 N>
-struct shape_t
+struct shape
 {
 public:
 
@@ -39,34 +39,34 @@ public:
 public:
 
     __host__ __device__
-    shape_t()
+    shape()
       : _data {}
     {}
 
     template <typename... Size>
     __host__ __device__
-    shape_t(Size... sizes)
+    shape(Size... sizes)
       : _data {static_cast<size_type>(sizes)...}
     {
         static_assert(sizeof...(Size) == N);
     }
 
     __host__ __device__
-    shape_t(const shape_t& s)
+    shape(const shape& s)
     {
         for (size_type n = 0; n < N; ++n)
             _data[n] = s._data[n];
     }
 
     __host__ __device__
-    shape_t(const lumina::shape_t<N>& s)
+    shape(const lumina::shape<N>& s)
     {
         for (size_type n = 0; n < N; ++n)
             _data[n] = s[n];
     }
 
-    __host__ __device__ shape_t&
-    operator= (const shape_t& s)
+    __host__ __device__ shape&
+    operator= (const shape& s)
     {
         for (size_type n = 0; n < N; ++n)
             _data[n] = s._data[n];
@@ -74,7 +74,7 @@ public:
     }
 
     __host__ __device__ bool
-    operator== (const shape_t& s) const
+    operator== (const shape& s) const
     {
         for (size_type n = 0; n < N; ++n)
             if (_data[n] != s[n])
@@ -83,7 +83,7 @@ public:
     }
 
     __host__ __device__ bool
-    operator!= (const shape_t& s) const
+    operator!= (const shape& s) const
     {
         return !((*this) == s);
     }
@@ -109,9 +109,9 @@ public:
         return s;
     }
 
-    __host__ __device__ operator lumina::shape_t<N> () const
+    __host__ __device__ operator lumina::shape<N> () const
     {
-        lumina::shape_t<N> s;
+        lumina::shape<N> s;
         for (size_type n = 0; n < N; ++n)
             s[n] = _data[n];
         return s;
@@ -134,7 +134,7 @@ public:
     using const_reference = const value_type&;
     using iterator        = pointer;
     using const_iterator  = const_pointer;
-    using shape_type      = shape_t<N>;
+    using shape_type      = lumina::cuda::shape<N>;
     using size_type       = typename shape_type::size_type;
 
 public:
@@ -514,7 +514,7 @@ public:
     operator>> (lumina::tensor<N, U, alloc>& t) const
     {
         static_assert(sizeof(T) == sizeof(U));
-        t.reshape(_shape.operator lumina::shape_t<N> ());
+        t.reshape(_shape.operator lumina::shape<N> ());
         memcpy(t.data(), _data, size() * sizeof(T), D2H);
     }
 

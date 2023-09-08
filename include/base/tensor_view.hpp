@@ -112,8 +112,8 @@ protected:
     size_type _data[N];
 };
 
-template <i64 N, typename T, typename _alloc = heap_allocator<T>>
-class tensor
+template <i64 N, typename T>
+class tensor_view
 {
 public:
 
@@ -125,7 +125,7 @@ public:
     using iterator        = pointer;
     using const_iterator  = const_pointer;
     using size_type       = decltype(N);
-    using shape_type      = lumina::shape<N>;
+    using shape_type      = shape<N>;
 
 public:
 

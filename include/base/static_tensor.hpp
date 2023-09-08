@@ -26,7 +26,6 @@
 
 #include "base/types.hpp"
 #include "base/memory.hpp"
-#include "base/vec.hpp"
 
 #include <iostream>
 #include <iomanip>
@@ -37,14 +36,18 @@
 #include <cmath>
 
 namespace lumina {
+namespace compile_time {
 
-template <i64... Shape>
-class static_tensor;
+template <i64... Dims>
+class shape {};
 
-template <>
-class static_tensor<N, Rest> : public static_tensor<Rest...>
+template <typename T, typename Shape>
+class tensor;
+
+template <typename T, i64 N, i64... Rest>
+class tensor<T, shape<N, Rest...>>
 {
-    using base = static_tensor<Rest...>;
+    using base = tensor<T, shape<Rest...>>;
 
 public:
 
@@ -59,10 +62,6 @@ public:
 
 public:
 
-    static_tensor()
-      : base()
-    {}
-
     template <typename... Size>
     reference
     operator ()(size_type size, Size... sizes)
@@ -71,17 +70,17 @@ public:
         return _data[size](sizes...);
     }    
 
-protected:
+// protected:
 
     base _data[N];
 };
 
-template <>
-class static_tensor
+template <typename T>
+class tensor<T, shape<>>
 {
 public:
 
-    using value_type      = float;
+    using value_type      = T;
     using pointer         = value_type*;
     using const_pointer   = const value_type*;
     using reference       = value_type&;
@@ -92,9 +91,10 @@ public:
 
 public:
 
-protected:
+// protected:
 
     value_type _data;  
 };
 
+}
 } // namespace lumina

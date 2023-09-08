@@ -22,49 +22,34 @@
 
 */
 
-#pragma once
-
-#include "base/matrix.hpp"
-#include "base/array.hpp"
-#include "base/blas.hpp"
-
-#include "neural/node.hpp"
-
-#include <cassert>
-#include <random>
+#include "base/tensor.hpp"
+#include "base/memory.hpp"
+#include "base/types.hpp"
 
 namespace lumina {
 namespace neural {
 
-class network
+class node
 {
 public:
 
-    network() {}
-    ~network() {
-        for (node* n : _nodes) {
-            delete n;
-        }
-    }
+    using size_type = i64;
 
-    void
-    forward() {
-        for (node* n : _nodes) {
-            n->forward();
-        }
-    }
+public:
 
-    void
-    backward() {
-        for (node* n : _nodes) {
-            n->backward();
-        }
-    }
+    node() = default;
 
-protected:
+    virtual void
+    forward() = 0;
+    virtual void
+    backward() = 0;
 
-    array<node*> _nodes;
+    virtual ~node() = default;
 };
+
+class matmul : public node {};
+class map : public node {};
+
 
 } // namespace neural
 } // namespace lumina
