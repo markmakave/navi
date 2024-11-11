@@ -1,10 +1,14 @@
 cmake_minimum_required(VERSION 3.27)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_FLAGS -Wall)
+set(CMAKE_CXX_FLAGS_DEBUG -g)
+set(CMAKE_CXX_FLAGS_RELEASE -O3)
+
 project(lumina LANGUAGES C CXX CUDA)
 
 find_package(PNG REQUIRED)
 
-set(CMAKE_CXX_FLAGS "-std=c++20 -O3 -Wall -Wextra -fopenmp")
 include_directories(
     .
     include
@@ -35,4 +39,4 @@ add_executable(navi src/navi/main.cpp)
 target_link_libraries(navi qoi ${PNG_LIBRARIES} pthread cuda lumina)
 set_property(TARGET navi PROPERTY CUDA_ARCHITECTURES native)
 
-add_subdirectory(service)
+# add_subdirectory(service)
