@@ -84,7 +84,6 @@ public:
         {
             return { *static_cast<typename base::iterator&>(*this), *it };
         }
-
     };
 
     struct proxy : public base::proxy
@@ -123,9 +122,6 @@ template <typename... Args>
 zip(Args&&...) -> zip<Args...>;
 
 
-/**
- * Range class for range iteration
- */
 template <typename size_type>
 class range
 {
@@ -140,7 +136,7 @@ public:
 
         bool operator!= (const iterator& other) const
         {
-            return value != other.value;
+            return step > 0 ? (value < other.value) : (value > other.value);
         }
 
         iterator& operator++ ()
@@ -184,21 +180,31 @@ protected:
  * - T::iterator::size_type
  */
 
-// template <typename T>
-// class enumerate
-// {
-// public:
+template <typename T>
+class enumerate
+{
+public:
 
-//     enumerate(T&& container)
-//     :   _container({container.size()}, std::forward<T>(container))
-//     {}
+    enumerate(T&& container)
+    :   _container({container.size()}, std::forward<T>(container))
+    {}
 
-// protected:
+    auto begin()
+    {
+        return _container.begin();
+    }
 
-//     zip<range<typename std::decay_t<T>::size_type>, T> _container;
-// };
+    auto end()
+    {
+        return _container.end();
+    }
 
-// template <typename T>
-// enumerate(T&&) -> enumerate<T>;
+protected:
+
+    zip<range<typename std::decay_t<T>::size_type>, T> _container;
+};
+
+template <typename T>
+enumerate(T&&) -> enumerate<T>;
 
 }
