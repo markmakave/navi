@@ -58,11 +58,11 @@ public:
     {
         typename std::decay_t<T>::iterator it;
 
-        bool operator!= (iterator&& other) const
+        bool operator!= (const iterator& other) const
         {
-            return (it != other.it) or
-                *static_cast<const typename base::iterator*>(this) !=
-                *static_cast<const typename base::iterator*>(&other);
+            return (it != other.it) and
+                (static_cast<const base::iterator&>(*this) !=
+                static_cast<const base::iterator&>(other));
         }
 
         iterator& operator++ ()
@@ -74,7 +74,7 @@ public:
 
         proxy operator* ()
         {
-            return { **static_cast<typename base::iterator*>(this), *it };
+            return { *static_cast<typename base::iterator&>(*this), *it };
         }
 
     };
