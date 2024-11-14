@@ -111,10 +111,10 @@ public:
 		int x0	  = 0;
 		int y0	  = radius;
 
-		(*this)[y + radius][x] = color;
-		(*this)[y - radius][x] = color;
-		(*this)[y][x + radius] = color;
-		(*this)[y][x - radius] = color;
+		(*this)(x, y + radius) = color;
+		(*this)(x, y - radius) = color;
+		(*this)(x + radius, y) = color;
+		(*this)(x - radius, y) = color;
 
 		while (x0 < y0) {
 			if (f >= 0) {
@@ -127,15 +127,29 @@ public:
 			ddF_x += 2;
 			f += ddF_x;
 
-			(*this)[y + y0][x + x0] = color;
-			(*this)[y - y0][x + x0] = color;
-			(*this)[y + y0][x - x0] = color;
-			(*this)[y - y0][x - x0] = color;
-			(*this)[y + x0][x + y0] = color;
-			(*this)[y - x0][x + y0] = color;
-			(*this)[y + x0][x - y0] = color;
-			(*this)[y - x0][x - y0] = color;
+			(*this)(x + x0, y + y0) = color;
+			(*this)(x + x0, y - y0) = color;
+			(*this)(x - x0, y + y0) = color;
+			(*this)(x - x0, y - y0) = color;
+			(*this)(x + y0, y + x0) = color;
+			(*this)(x + y0, y - x0) = color;
+			(*this)(x - y0, y + x0) = color;
+			(*this)(x - y0, y - x0) = color;
 		}
+	}
+
+	void circle(const matrix<bool>& mask, size_type radius, const_reference color)
+	{
+		if (mask.shape() != this->shape())
+		{
+			log::error("mask and image must have the same shape");
+			return;
+		}
+
+		for (size_type y = radius; y < mask.shape(1) - radius; ++y)
+			for (size_type x = radius; x < mask.shape(0) - radius; ++x)
+				if (mask(x, y))
+					circle(x, y, radius, color);
 	}
 
 	void

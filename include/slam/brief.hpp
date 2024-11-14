@@ -27,8 +27,6 @@
 #include <cstdint>
 #include <bitset>
 
-#include "cuda/array.cuh"
-#include "cuda/matrix.cuh"
 #include "base/color.hpp"
 
 namespace lumina {

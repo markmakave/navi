@@ -2,36 +2,33 @@
 #include <vector>
 
 #include "util/utility.hpp"
+#include "util/timer.hpp"
 
-#include "base/tensor.hpp"
-#include "base/tuple.hpp"
+#include "slam/kernels.hpp"
 
+#include "base/image.hpp"
 
-struct A
-{
-    A() { std::cout << "A()\n"; }
-    A(const A&) { std::cout << "A(const A&)\n"; }
-    A(A&&) { std::cout << "A(A&&)\n"; }
-    ~A() { std::cout << "~A()\n"; }
-
-    A& operator= (const A&) { std::cout << "A::operator=(const A&)\n"; return *this; }
-    A& operator= (A&&) { std::cout << "A::operator=(A&&)\n"; return *this; }
-};
-
-template <typename T>
-void print(const T& t)
-{
-    std::cout << t.template get<0>() << '\n';
-
-    if constexpr (T::degree > 1)
-        print(static_cast<const typename T::base&>(t));
-}
+#include "cuda/tensor.cuh"
 
 int main(int argc, char** argv)
 {
-    auto t = lumina::tuple(1, 2.f, 3.0, '4', "5");
+    lumina::image<lumina::gray> image;
+    image.read("../resource/stereo/Staircase/im0.png");
 
-    print(t);
+    lumina::matrix<bool> mask;
+
+    constexpr size_t N = 100;
+    
+    lumina::timer t;
+    for (int i = 0; i < N; ++i)
+        lumina::slam::detect(image, mask);
+    lumina::log::info(t.elapsed() / N, "s");
+
+    t = lumina::timer();
+    image.circle(mask, 2, 255);
+    lumina::log::info(t.elapsed(), "s");
+
+    image.write("out.png");
 
     return 0;
 }

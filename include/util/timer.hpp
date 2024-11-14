@@ -32,9 +32,8 @@ namespace lumina {
 class timer {
 public:
 
-    timer(const std::string& name)
-    :   _begin(std::chrono::high_resolution_clock::now()),
-        _name(name)
+    timer()
+    :   _begin(std::chrono::high_resolution_clock::now())
     {}
     
     double
@@ -48,9 +47,6 @@ public:
 private:
 
     std::chrono::high_resolution_clock::time_point _begin;
-    std::string _name;
-    int _iterations;
-
 };
 
 }

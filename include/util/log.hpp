@@ -49,10 +49,10 @@ public:
         const char* terminator;
     };
 
-    #define info_config    { std::cout, "[ INFO ]",    cyan,    " ", "\n" }
-    #define debug_config   { std::cout, "[ DEBUG ]",   magenta, " ", "\n" }
-    #define warning_config { std::cerr, "[ WARNING ]", yellow,  " ", "\n" }
-    #define error_config   { std::cerr, "[ ERROR ]",   red,     " ", "\n" }
+    #define info_config    { std::cout, "[I]", cyan,    " ", "\n" }
+    #define debug_config   { std::cout, "[D]", magenta, " ", "\n" }
+    #define warning_config { std::cerr, "[W]", yellow,  " ", "\n" }
+    #define error_config   { std::cerr, "[E]", red,     " ", "\n" }
 
     template <typename ...Args>
     static void

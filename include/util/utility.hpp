@@ -25,9 +25,18 @@ public:
     {
         typename iterator::reference ref;
 
-        friend std::ostream& operator<< (std::ostream& os, const proxy& p)
+        template <size_t N>
+        requires (N == 0)
+        auto& get()
         {
-            return os << p.ref;
+            return ref;
+        }
+
+        template <size_t N>
+        requires (N > 0)
+        const auto& get() const
+        {
+            return ref;
         }
     };
 
@@ -90,9 +99,19 @@ public:
     {
         typename std::decay_t<T>::iterator::reference ref;
 
-        friend std::ostream& operator<< (std::ostream& os, const proxy& p)
+        template <size_t N>
+        constexpr auto& get()
         {
-            return os << p.ref << " " << static_cast<const typename base::proxy&>(p);
+            if constexpr (N == 0)
+                return ref;
+            else
+                return base::proxy::template get<N - 1>();
+        }
+
+        template <size_t N>
+        constexpr auto& operator[] (std::integral_constant<size_t, N>)
+        {
+            return get<N>();
         }
     };
 

@@ -302,24 +302,20 @@ public:
     }
 
     template <typename... Index>
+    requires (sizeof...(Index) == N)
     reference
     operator()(Index... index)
     {
-        static_assert(sizeof...(Index) == N);
-
-        size_type indices[N] = {index...};
-
+        size_type indices[N] = {static_cast<size_type>(index)...};
         return (*this)(indices);
     }
 
     template <typename... Index>
+    requires (sizeof...(Index) == N)
     const_reference
     operator()(Index... index) const
     {
-        static_assert(sizeof...(Index) == N);
-
-        size_type indices[N] = {index...};
-
+        size_type indices[N] = {static_cast<size_type>(index)...};
         return (*this)(indices);
     }
 
@@ -354,11 +350,10 @@ public:
     }
 
     template <typename... Index>
+    requires (sizeof...(Index) == N)
     reference
     at(Index... index)
     {
-        static_assert(sizeof...(Index) == N);
-
         size_type indices[N] = {index...};
 
         for (size_type n = 0; n < N; ++n)
@@ -372,11 +367,10 @@ public:
     }
 
     template <typename... Index>
+    requires (sizeof...(Index) == N)
     const_reference
     at(Index... index) const
     {
-        static_assert(sizeof...(Index) == N);
-
         size_type indices[N] = {index...};
 
         for (size_type n = 0; n < N; ++n)
