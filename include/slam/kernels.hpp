@@ -10,8 +10,9 @@ namespace slam {
 
 void
 detect(
-    const matrix<lumina::gray>& input, 
-          matrix<bool>&     output
+    const matrix<lumina::gray>& input,
+    const int                   threshold,
+          matrix<bool>&         output
 );
 
 void

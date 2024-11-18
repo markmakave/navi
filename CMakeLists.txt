@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.27)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS -Wall)
-set(CMAKE_CXX_FLAGS_DEBUG -g)
-set(CMAKE_CXX_FLAGS_RELEASE -O3)
+set(CMAKE_CXX_FLAGS_DEBUG "-g -fsanitize=undefined -fsanitize=address")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -fopenmp")
 
 project(lumina LANGUAGES C CXX CUDA)
 
@@ -22,6 +22,9 @@ target_include_directories(qoi PUBLIC vendor/qoi)
 add_library(lumina 
     src/base/image.cpp
 
+    src/slam/fast9.cpp
+    src/slam/fast11.cpp
+    src/slam/detect.cpp
     src/slam/descript.cpp
 
     src/cuda/cuda.cpp

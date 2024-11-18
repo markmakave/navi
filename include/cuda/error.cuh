@@ -10,7 +10,7 @@ public:
     error(cudaError_t error);
 
     const char*
-    describe() const;
+    message() const;
 
     operator bool() const;
 

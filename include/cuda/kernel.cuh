@@ -1,9 +1,12 @@
 #pragma once
 
+#include <cuda_runtime.h>
+
 #include "util/log.hpp"
 
-namespace lumina {
-namespace cuda {
+#include "cuda/error.cuh"
+
+namespace lumina::cuda {
 
 template <typename... Args>
 class kernel
@@ -12,7 +15,7 @@ public:
 
     __host__
     kernel(void (*f)(Args...))
-      : _ptr(f)
+    :   _ptr(f)
     {}
 
     __host__ auto
@@ -31,13 +34,14 @@ public:
                dim3          threads,
                const stream& stream,
                size_t        shared,
-               const Args&... args) const
-    {
+               const Args&... args
+    ) const {
         const void* arg_ptrs[sizeof...(Args)] = {&args...};
-        cudaError_t status                    = cudaLaunchKernel(
-            (void*)_ptr, blocks, threads, (void**)arg_ptrs, shared, stream);
-        if (status != cudaSuccess)
-            lumina::log::error("cudaLaunchKernel failed:", cudaGetErrorString(status));
+
+        cuda::error error = cudaLaunchKernel((void*)_ptr, blocks, threads, (void**)arg_ptrs, shared, stream);
+
+        if (error)
+            lumina::log::error("kernel launch failed: ", error.message());
     }
 
 private:
@@ -45,5 +49,4 @@ private:
     void (*_ptr)(Args...);
 };
 
-} // namespace cuda
-} // namespace lumina
+} // namespace lumina::cuda

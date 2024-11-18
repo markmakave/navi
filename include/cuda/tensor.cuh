@@ -24,10 +24,12 @@
 
 #pragma once
 
-#include "base/tensor.hpp"
+#include <cuda_runtime.h>
 
-namespace lumina {
-namespace cuda {
+#include "base/tensor.hpp"
+#include "cuda/memory.cuh"
+
+namespace lumina::cuda {
 
 template <i64 N>
 struct shape
@@ -44,19 +46,16 @@ public:
     {}
 
     template <typename... Size>
+    requires(sizeof...(Size) == N)
     __host__ __device__
     shape(Size... sizes)
-      : _data {static_cast<size_type>(sizes)...}
-    {
-        static_assert(sizeof...(Size) == N);
-    }
+    :   _data {static_cast<size_type>(sizes)...}
+    {}
 
     __host__ __device__
     shape(const shape& s)
-    {
-        for (size_type n = 0; n < N; ++n)
-            _data[n] = s._data[n];
-    }
+    :   _data(s._data)
+    {}
 
     __host__ __device__
     shape(const lumina::shape<N>& s)
@@ -66,7 +65,7 @@ public:
     }
 
     __host__ __device__ shape&
-    operator= (const shape& s)
+    operator=(const shape& s)
     {
         for (size_type n = 0; n < N; ++n)
             _data[n] = s._data[n];
@@ -74,7 +73,7 @@ public:
     }
 
     __host__ __device__ bool
-    operator== (const shape& s) const
+    operator==(const shape& s) const
     {
         for (size_type n = 0; n < N; ++n)
             if (_data[n] != s[n])
@@ -83,19 +82,19 @@ public:
     }
 
     __host__ __device__ bool
-    operator!= (const shape& s) const
+    operator!=(const shape& s) const
     {
         return !((*this) == s);
     }
 
     __host__ __device__ size_type&
-    operator[] (size_type dim)
+    operator[](size_type dim)
     {
         return _data[dim];
     }
 
     const __host__ __device__ size_type&
-    operator[] (size_type dim) const
+    operator[](size_type dim) const
     {
         return _data[dim];
     }
@@ -109,7 +108,8 @@ public:
         return s;
     }
 
-    __host__ __device__ operator lumina::shape<N> () const
+    __host__ __device__
+    operator lumina::shape<N>() const
     {
         lumina::shape<N> s;
         for (size_type n = 0; n < N; ++n)
@@ -197,7 +197,7 @@ public:
     }
 
     __host__ __device__ tensor&
-    operator= (const tensor& t)
+    operator=(const tensor& t)
     {
         if (&t != this) {
             reshape(t._shape);
@@ -208,7 +208,7 @@ public:
     }
 
     __host__ __device__ tensor&
-    operator= (tensor&& t)
+    operator=(tensor&& t)
     {
         if (&t != this) {
             _data  = t._data;
@@ -223,7 +223,7 @@ public:
 
     template <typename U, typename alloc>
     __host__ __device__ tensor&
-    operator= (const tensor<N, U, alloc>& t)
+    operator=(const tensor<N, U, alloc>& t)
     {
         reshape(t.shape());
         for (size_type i = 0; i < t.size(); ++i)
@@ -264,6 +264,7 @@ public:
     }
 
     template <typename... Size>
+    requires(sizeof...(Size) == N)
     __host__ __device__ void
     reshape(Size... sizes)
     {
@@ -285,7 +286,7 @@ public:
     }
 
     __host__ __device__ decltype(auto)
-             operator() (size_type indices[N])
+    operator()(size_type indices[N])
     {
         size_type offset = 0;
         size_type dim    = 1;
@@ -298,7 +299,7 @@ public:
     }
 
     __host__ __device__ decltype(auto)
-             operator() (size_type indices[N]) const
+    operator()(size_type indices[N]) const
     {
         size_type offset = 0;
         size_type dim    = 1;
@@ -311,77 +312,55 @@ public:
     }
 
     template <typename... Index>
+    requires(sizeof...(Index) == N)
     __host__ __device__ decltype(auto)
-             operator() (Index... index)
+    operator()(Index... index)
     {
-        static_assert(sizeof...(Index) == N);
-
         size_type indices[N] = {index...};
-
         return (*this)(indices);
     }
 
     template <typename... Index>
+    requires (sizeof...(Index) == N)
     __host__ __device__ decltype(auto)
-             operator() (Index... index) const
+    operator()(Index... index) const
     {
-        static_assert(sizeof...(Index) == N);
-
         size_type indices[N] = {index...};
-
         return (*this)(indices);
     }
 
-#if __cplusplus >= 202002L
-
-    template <typename... Index>
     __host__ __device__ decltype(auto)
-             operator[] (Index... index)
-    {
-        return operator() (index...);
-    }
-
-    template <typename... Index>
-    __host__ __device__ decltype(auto)
-             operator[] (Index... index) const
-    {
-        return operator() (index...);
-    }
-
-#endif
-
-    __host__ __device__ decltype(auto)
-             operator[] (size_type index)
+    operator[](size_type index)
     {
         return _alloc::access(_data + index);
     }
 
     __host__ __device__ decltype(auto)
-             operator[] (size_type index) const
+    operator[](size_type index) const
     {
         return _alloc::access(_data + index);
     }
 
     __host__ __device__ decltype(auto)
-             front()
+    front()
     {
         return _alloc::access(_data + 0);
     }
 
     __host__ __device__ decltype(auto)
-             front() const
+    front() const
     {
         return _alloc::access(_data + 0);
     }
 
     __host__ __device__ decltype(auto)
-             back()
+    back()
     {
         return _alloc::access(_data + size() - 1);
     }
 
     __host__ __device__ decltype(auto)
-             back() const
+    back() const
     {
         return _alloc::access(_data + size() - 1);
     }
@@ -411,7 +390,7 @@ public:
     }
 
     __host__ friend std::ostream&
-    operator<< (std::ostream& out, const tensor& t)
+    operator<<(std::ostream& out, const tensor& t)
     {
         out << "Tensor<" << typeid(value_type).name() << "> " << t._shape[0];
         for (size_type n = 1; n < N; ++n)
@@ -502,7 +481,7 @@ public:
 
     template <typename U, typename alloc>
     __host__ void
-    operator<< (const lumina::tensor<N, U, alloc>& t)
+    operator<<(const lumina::tensor<N, U, alloc>& t)
     {
         static_assert(sizeof(T) == sizeof(U));
         reshape(shape_type(t.shape()));
@@ -511,10 +490,10 @@ public:
 
     template <typename U, typename alloc>
     __host__ void
-    operator>> (lumina::tensor<N, U, alloc>& t) const
+    operator>>(lumina::tensor<N, U, alloc>& t) const
     {
         static_assert(sizeof(T) == sizeof(U));
-        t.reshape(_shape.operator lumina::shape<N> ());
+        t.reshape(_shape.operator lumina::shape<N>());
         memcpy(t.data(), _data, size() * sizeof(T), D2H);
     }
 
@@ -538,5 +517,4 @@ protected:
     }
 };
 
-} // namespace cuda
-} // namespace lumina
+} // namespace lumina::cuda

@@ -4,7 +4,8 @@
 namespace lumina::slam {
 
 void detect(
-    const matrix<lumina::gray>& input, 
+    const matrix<lumina::gray>& input,
+    const int                   threshold,
           matrix<bool>&         output
 ) {
     output.reshape(input.shape());
@@ -21,7 +22,7 @@ void detect(
                 input(x - 3, y), input(x - 3, y - 1), input(x - 2, y - 2), input(x - 1, y - 3)
             };
 
-            output(x, y) = fast<9>(center, circle, 8);
+            output(x, y) = fast<11>(center, circle, threshold);
         } 
 }
 

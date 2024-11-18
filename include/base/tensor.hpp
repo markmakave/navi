@@ -24,9 +24,6 @@
 
 #pragma once
 
-#include "base/types.hpp"
-#include "base/memory.hpp"
-
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -34,6 +31,10 @@
 
 #include <cassert>
 #include <cmath>
+
+#include "base/types.hpp"
+#include "base/memory.hpp"
+#include "util/utility.hpp"
 
 namespace lumina {
 
@@ -519,6 +520,46 @@ public:
     {
         std::ifstream file(filename);
         read(file);
+    }
+
+
+    tensor<N, bool> operator== (const tensor& other) const
+    {
+        if (_shape != other._shape)
+            throw std::runtime_error("shape mismatch");
+
+        tensor<N, bool> mask(_shape);
+        const size_type __size = size();
+        for (size_type i = 0; i < __size; ++i)
+            mask._data[i] = (this->_data[i] == other._data[i]);
+
+        return mask;
+    }
+
+
+    tensor<N, bool> operator!= (const tensor& other) const
+    {
+        if (_shape != other._shape)
+            throw std::runtime_error("shape mismatch");
+
+        tensor<N, bool> mask(_shape);
+        const size_type __size = size();
+        for (size_type i = 0; i < __size; ++i)
+            mask._data[i] = (this->_data[i] != other._data[i]);
+
+        return mask;
+    }
+
+    
+    size_type count() const
+    requires (std::is_same_v<value_type, bool>)
+    {
+        size_type result = 0;
+        for (const auto& x : *this)
+            if (x)
+                ++result;
+
+        return result;
     }
 
 protected:
