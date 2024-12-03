@@ -25,124 +25,65 @@
 #pragma once
 
 #include <iostream>
-#include <chrono>
-#include <ctime>
 
-namespace lumina {
+#define ERROR   (1 << 0)
+#define WARNING (1 << 1)
+#define INFO    (1 << 2)
+#define DEBUG   (1 << 3)
+#define TRACE   (1 << 4)
 
-class log
+#define ALL         (ERROR | WARNING | INFO | DEBUG | TRACE)
+#define PRODUCTION  (ERROR | WARNING | INFO)
+
+#define LOG_LEVEL (ALL)
+
+namespace lumina::log
 {
-public:
 
-    #define cyan    "\033[36m"
-    #define magenta "\033[35m"
-    #define yellow  "\033[33m"
-    #define red     "\033[31m"
-    #define clear   "\033[0m"
+#define RED     "\033[31m"
+#define YELLOW  "\033[33m"
+#define GREEN   "\033[32m"
+#define MAGENTA "\033[35m"
+#define CYAN    "\033[36m"
+#define CLEAR   "\033[0m"
 
-    struct config
-    {
-        std::ostream& stream;
-        const char* label;
-        const char* color;
-        const char* separator;
-        const char* terminator;
-    };
+struct nosep_t {};
+static inline constexpr nosep_t nosep;
 
-    #define info_config    { std::cout, "[I]", cyan,    " ", "\n" }
-    #define debug_config   { std::cout, "[D]", magenta, " ", "\n" }
-    #define warning_config { std::cerr, "[W]", yellow,  " ", "\n" }
-    #define error_config   { std::cerr, "[E]", red,     " ", "\n" }
+template <typename... Args>
+void log(std::ostream& os, Args&&... args)
+{
+    ((os << std::forward<Args>(args)), ...) << '\n';
+}
 
-    template <typename ...Args>
-    static void
-    print(const config& cfg, const Args&... args)
-    {
-        cfg.stream << cfg.color;
-        console(cfg, cfg.label, date(), args...);
-        cfg.stream << clear;
-        std::flush(cfg.stream);
-    }
+template <typename... Args>
+void error(Args&&... args)
+{
+    log(std::cerr, RED, "[E]", args..., CLEAR);
+}
 
-    template <typename ...Args>
-    static void
-    info(const Args&... args)
-    {
-        print(info_config, args...);
-    }
+template <typename... Args>
+void warning(Args&&... args)
+{
+    log(std::cerr, YELLOW, "[W]", args..., CLEAR);
+}
 
-    template <typename ...Args>
-    static void
-    debug(const Args&... args)
-    {
-        print(debug_config, args...);
-    }
+template <typename... Args>
+void info(Args&&... args)
+{
+    log(std::cout, GREEN, "[I]", args..., CLEAR);
+}
 
-    template <typename ...Args>
-    static void
-    warning(const Args&... args)
-    {
-        print(warning_config, args...);
-    }
+template <typename... Args>
+void debug(Args&&... args)
+{
+    log(std::cout, MAGENTA, "[D]", args..., CLEAR);
+}
 
-    template <typename ...Args>
-    static void
-    error(const Args&... args)
-    {
-        print(error_config, args...);
-    }
-
-private:
-
-    log()                      = delete;
-    log(const log&)            = delete;
-    log(log&&)                 = delete;
-    log& operator=(const log&) = delete;
-    log& operator=(log&&)      = delete;
-    ~log()                     = delete;
-
-    template <typename Arg>
-    static void
-    console(const config& conf, const Arg& arg)
-    {
-        conf.stream << arg << conf.terminator << std::flush;
-    }
-
-    template <typename Arg, typename ...Args>
-    static void
-    console(const config& conf, const Arg& arg, const Args& ...args)
-    {
-        conf.stream << arg << conf.separator;
-        console(conf, args...);
-    }
-
-    static
-    const char*
-    date()
-    {
-        static char buf[80];
-        auto now = std::chrono::system_clock::now();
-        auto in_time_t = std::chrono::system_clock::to_time_t(now);
-        std::strftime(buf, sizeof(buf), "[%d.%m.%Y %X]", std::localtime(&in_time_t));
-        return buf;
-    }
-
-    #undef cyan
-    #undef magenta
-    #undef yellow
-    #undef red
-    #undef clear
-
-};
-
-#define INFO(...)    lumina::log::info(__VA_ARGS__)
-#define WARNING(...) lumina::log::warning(__VA_ARGS__)
-#define ERROR(...)   lumina::log::error(__VA_ARGS__)
-
-#ifndef NDEBUG
-#define DEBUG(...)   lumina::log::debug(__VA_ARGS__)
-#else
-#define DEBUG(...) {}
-#endif
+template <typename... Args>
+void trace(Args&&... args)
+{
+    log(std::cout, CYAN, "[T]", args..., CLEAR);
+}
 
 }

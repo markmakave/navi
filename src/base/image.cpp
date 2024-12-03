@@ -211,7 +211,7 @@ image<rgba>::decode<image<rgba>::format::png>(const tensor<1, byte>& buffer)
 
 // QOI GRAY
 
-#include "vendor/qoi/qoi.hpp"
+#include "3rd-party/qoi/qoi.hpp"
 
 // NOT AVAILABLE AT THE MOMENT
 // waiting for custom qoi implementation

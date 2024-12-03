@@ -16,8 +16,8 @@ include_directories(
     ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
 )
 
-add_library(qoi vendor/qoi/qoi.cpp)
-target_include_directories(qoi PUBLIC vendor/qoi)
+add_library(qoi 3rd-party/qoi/qoi.cpp)
+target_include_directories(qoi PUBLIC 3rd-party/qoi)
 
 add_library(lumina 
     src/base/image.cpp

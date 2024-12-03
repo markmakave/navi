@@ -38,7 +38,5 @@ int main(int argc, char** argv)
             csv << u << ',' << v << ',' << x << '\n';
         }
 
-    lm::broadcast(lm::shape(1), lm::shape(2, 1));
-
     return 0;
 }

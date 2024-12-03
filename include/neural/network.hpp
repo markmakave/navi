@@ -33,8 +33,7 @@
 #include <cassert>
 #include <random>
 
-namespace lumina {
-namespace neural {
+namespace lumina::neural {
 
 class network
 {
@@ -66,5 +65,4 @@ protected:
     array<node*> _nodes;
 };
 
-} // namespace neural
-} // namespace lumina
+} // namespace lumina::neural
