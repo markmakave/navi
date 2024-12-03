@@ -60,8 +60,8 @@ protected:
     cudaGraph_t _handle;
 };
 
-template <>
-graph::node add_node<graph::node::type::host>()
-{}
+// template <>
+// graph::node add_node<graph::node::type::host>()
+// {}
 
 }

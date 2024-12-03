@@ -109,11 +109,9 @@ public:
 		buf.type		= V4L2_BUF_TYPE_VIDEO_CAPTURE;
 		buf.memory		= V4L2_MEMORY_MMAP;
 
-		for (buf.index = 0; buf.index < buffers.size(); ++buf.index) {
-			if (ioctl(VIDIOC_QBUF, &buf) != 0) {
+		for (buf.index = 0; buf.index < buffers.size(); ++buf.index)
+			if (ioctl(VIDIOC_QBUF, &buf) != 0)
 				throw std::runtime_error("Camera queuing buffer failed");
-			}
-		}
 
 		streaming = true;
 	}

@@ -5,6 +5,7 @@
 #include "util/log.hpp"
 
 #include "cuda/error.cuh"
+#include "cuda/stream.cuh"
 
 namespace lumina::cuda {
 

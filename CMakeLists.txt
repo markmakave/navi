@@ -38,7 +38,7 @@ add_library(lumina
 target_link_libraries(lumina qoi ${PNG_LIBRARIES} pthread cudart_static cuda cublas)
 set_property(TARGET lumina PROPERTY CUDA_ARCHITECTURES native)
 
-add_executable(navi src/navi/main.cpp)
+add_executable(navi src/navi/main.cu)
 target_link_libraries(navi qoi ${PNG_LIBRARIES} pthread cuda lumina)
 set_property(TARGET navi PROPERTY CUDA_ARCHITECTURES native)
 
