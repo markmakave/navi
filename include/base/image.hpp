@@ -25,7 +25,6 @@
 #pragma once
 
 #include "base/matrix.hpp"
-#include "base/array.hpp"
 #include "base/color.hpp"
 #include "base/types.hpp"
 
@@ -188,8 +187,7 @@ public:
 		}
 	}
 
-	void
-	read(const char* filename)
+	void read(const char* filename)
 	{
 		std::string ext = filename;
 		ext				= ext.substr(ext.find_last_of(".") + 1);
@@ -200,7 +198,7 @@ public:
 		size_type size = file.tellg();
 		file.seekg(0, std::ios::beg);
 
-		lumina::array<uint8_t> buffer(size);
+		tensor<1, byte> buffer(size);
 		file.read((char*)buffer.data(), size);
 
 		if (ext == "png")
@@ -209,13 +207,12 @@ public:
 			decode<format::qoi>(buffer);
 	}
 
-	void
-	write(const char* filename) const
+	void write(const char* filename) const
 	{
 		std::string ext = filename;
 		ext				= ext.substr(ext.find_last_of(".") + 1);
 
-		array<byte> buffer;
+		tensor<1, byte> buffer;
 
 		if (ext == "png")
 			buffer = encode<format::png>();
@@ -233,12 +230,11 @@ public:
 	};
 
 	template <format fmt>
-	array<byte>
-	encode() const;
+	tensor<1, byte> encode() const;
 
 	template <enum format fmt>
 	void
-	decode(const array<byte>& buffer);
+	decode(const tensor<1, byte>& buffer);
 };
 
 } // namespace lumina

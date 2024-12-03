@@ -26,92 +26,16 @@
 
 #include <iostream>
 #include <iomanip>
-#include <fstream>
+#include <cmath>
 #include <functional>
 
-#include <cassert>
-#include <cmath>
+#include "base/shape.hpp"
 
 #include "base/types.hpp"
 #include "base/memory.hpp"
-#include "util/utility.hpp"
+#include "utility/utility.hpp"
 
 namespace lumina {
-
-template <i64 N>
-struct shape
-{
-public:
-
-    using size_type = i64;
-
-public:
-
-    shape()
-      : _data {}
-    {}
-
-    template <typename... Size>
-    shape(Size... sizes)
-      : _data {static_cast<size_type>(sizes)...}
-    {
-        static_assert(sizeof...(Size) == N);
-    }
-
-    shape(const shape& s)
-    {
-        for (size_type n = 0; n < N; ++n)
-            _data[n] = s._data[n];
-    }
-
-    shape&
-    operator=(const shape& s)
-    {
-        for (size_type n = 0; n < N; ++n)
-            _data[n] = s._data[n];
-        return *this;
-    }
-
-    bool
-    operator==(const shape& s) const
-    {
-        for (size_type n = 0; n < N; ++n)
-            if (_data[n] != s[n])
-                return false;
-        return true;
-    }
-
-    bool
-    operator!=(const shape& s) const
-    {
-        return !((*this) == s);
-    }
-
-    size_type&
-    operator[](size_type dim)
-    {
-        return _data[dim];
-    }
-
-    const size_type&
-    operator[](size_type dim) const
-    {
-        return _data[dim];
-    }
-
-    size_type
-    volume() const
-    {
-        size_type s = 1;
-        for (size_type n = 0; n < N; ++n)
-            s *= _data[n];
-        return s;
-    }
-
-protected:
-
-    size_type _data[N];
-};
 
 template <i64 N, typename T, typename _alloc = heap_allocator<T>>
 class tensor
@@ -478,48 +402,6 @@ public:
         out << "]";
 
         return out;
-    }
-
-    void
-    write(std::ofstream& file) const
-    {
-        size_type order = N;
-        file.write((char*)&order, sizeof(order));
-        for (size_type n = 0; n < N; ++n)
-            file.write((char*)&_shape[n], sizeof(_shape[n]));
-
-        file.write((char*)_data, size() * sizeof(value_type));
-    }
-
-    void
-    write(const char* filename) const
-    {
-        std::ofstream file(filename);
-        write(file);
-    }
-
-    void
-    read(std::ifstream& file)
-    {
-        size_type order;
-        file.read((char*)&order, sizeof(order));
-
-        assert(order == N);
-
-        shape_type shape;
-        for (size_type n = 0; n < N; ++n)
-            file.read((char*)&shape[n], sizeof(shape[n]));
-
-        reshape(shape);
-
-        file.read((char*)_data, size() * sizeof(value_type));
-    }
-
-    void
-    read(const char* filename)
-    {
-        std::ifstream file(filename);
-        read(file);
     }
 
 

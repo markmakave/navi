@@ -2,7 +2,7 @@
 
 #include <cuda_runtime.h>
 
-#include "util/log.hpp"
+#include "utility/log.hpp"
 
 #include "cuda/error.cuh"
 #include "cuda/stream.cuh"

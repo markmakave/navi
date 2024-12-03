@@ -25,7 +25,7 @@
 #pragma once
 
 #include <alloca.h>
-#include "util/log.hpp"
+#include "utility/log.hpp"
 #include "base/types.hpp"
 
 namespace lumina {

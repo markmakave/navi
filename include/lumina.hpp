@@ -22,5 +22,5 @@
 #include "slam/slam.hpp"
 #include "cuda/cuda.cuh"
 
-#include "util/profiler.hpp"
-#include "util/timer.hpp"
+#include "utility/profiler.hpp"
+#include "utility/timer.hpp"

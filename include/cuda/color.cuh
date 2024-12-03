@@ -6,10 +6,9 @@ namespace lumina {
 namespace cuda {
 
 template <int lower, int upper>
-__host__ __device__
-static inline
-int
-clamp(int value)
+requires (lower <= upper)
+__host__ __device__ __forceinline__
+static int clamp(int value)
 {
     if (value > upper) return upper;
     if (value < lower) return lower;
@@ -20,21 +19,21 @@ struct rgb
 {
     byte r, g, b;
 
-    __host__ __device__
+    __host__ __device__ __forceinline__
     rgb()
     :   r(0),
         g(0),
         b(0)
     {}
 
-    __host__ __device__
+    __host__ __device__ __forceinline__
     rgb(gray g)
     :   r(g),
         g(g),
         b(g)
     {}
 
-    __host__ __device__
+    __host__ __device__ __forceinline__
     rgb(byte r, byte g, byte b)
     :   r(r),
         g(g),
@@ -48,7 +47,7 @@ struct rgb
         b(color.b)
     {}
 
-    __host__ __device__
+    __host__ __device__ __forceinline__
     operator gray() const
     {
         return clamp<0, 255>(0.2161 * r + 0.7152 * g + 0.0722 * b);
@@ -65,31 +64,30 @@ struct rgba : rgb
 {
     byte a;
 
-    __host__ __device__
+    __host__ __device__ __forceinline__
     rgba()
-    :   rgb(),
-        a(0)
+    :   a(0)
     {}
 
-    __host__ __device__
+    __host__ __device__ __forceinline__
     rgba(gray g)
     :   rgb(g),
         a(255)
     {}
 
-    __host__ __device__
+    __host__ __device__ __forceinline__
     rgba(byte r, byte g, byte b, byte a = 255)
     :   rgb(r, g, b),
         a(a)
     {}
 
-    __host__ __device__
+    __host__ __device__ __forceinline__
     rgba(const lumina::rgba& c)
     :   rgb(c.r, c.g, c.b),
         a(c.a)
     {}
 
-    __host__ __device__
+    __host__ __device__ __forceinline__
     operator gray () const
     {
         return clamp<0, 255>(0.2161 * r + 0.7152 * g + 0.0722 * b);

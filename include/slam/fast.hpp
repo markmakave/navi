@@ -5,6 +5,6 @@
 namespace lumina::slam {
 
 template <int N>
-bool fast(lumina::gray, const int[16], int);
+bool fast(gray, const int[16], int);
 
 }

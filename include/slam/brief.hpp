@@ -29,8 +29,7 @@
 
 #include "base/color.hpp"
 
-namespace lumina {
-namespace slam {
+namespace lumina::slam {
 
 struct point_pair
 {
@@ -109,7 +108,7 @@ public:
 
 private:
 
-    array<point_pair> _net;
+    tensor<1, point_pair> _net;
 };
 
 struct feature
@@ -118,5 +117,4 @@ struct feature
     int x, y;
 };
 
-}
 }

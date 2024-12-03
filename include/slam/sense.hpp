@@ -1,6 +1,6 @@
 #pragma once
 
-#include "util/log.hpp"
+#include "utility/log.hpp"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -39,7 +39,7 @@ public:
 	operator>> (image<byte>& frame)
 	{
 		int				   packet_length = 10022;
-		static array<byte> cache(packet_length * 2);
+		static tensor<1, byte> cache(packet_length * 2);
 		int				   border = 0;
 
 		frame.reshape(100, 100);

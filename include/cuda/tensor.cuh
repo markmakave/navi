@@ -389,99 +389,9 @@ public:
         return _data + size();
     }
 
-    __host__ friend std::ostream&
-    operator<<(std::ostream& out, const tensor& t)
-    {
-        out << "Tensor<" << typeid(value_type).name() << "> " << t._shape[0];
-        for (size_type n = 1; n < N; ++n)
-            out << "×" << t._shape[n];
-        out << '\n';
-
-        size_type max_index = 0;
-        for (size_type i = 0; i < t.size(); ++i)
-            if (t._data[i] > t._data[max_index])
-                max_index = i;
-
-        int number_length = std::log10(t._data[max_index]) + 1;
-
-        size_type index[N] = {};
-
-        std::function<void(size_type)> print;
-        print = [&](size_type dim) {
-            if (dim == 0) {
-                for (size_type n = 0; n < t.shape()[0]; ++n) {
-                    index[0] = n;
-                    out << std::setw(number_length + 1) << t(index) << ' ';
-                }
-            } else {
-                for (size_type n = 0; n < t.shape()[dim]; ++n) {
-                    index[dim] = n;
-
-                    if (n != 0)
-                        out << std::setw(N - dim) << ' ';
-                    out << "[";
-
-                    print(dim - 1);
-
-                    out << "]";
-                    if (n != t.shape()[dim] - 1)
-                        out << '\n';
-                }
-            }
-        };
-
-        out << "[";
-        print(N - 1);
-        out << "]";
-
-        return out;
-    }
-
-    __host__ void
-    write(std::ofstream& file) const
-    {
-        size_type order = N;
-        file.write((char*)&order, sizeof(order));
-        for (size_type n = 0; n < N; ++n)
-            file.write((char*)&_shape[n], sizeof(_shape[n]));
-
-        file.write((char*)_data, size() * sizeof(value_type));
-    }
-
-    __host__ void
-    write(const char* filename) const
-    {
-        std::ofstream file(filename);
-        write(file);
-    }
-
-    __host__ void
-    read(std::ifstream& file)
-    {
-        size_type order;
-        file.read((char*)&order, sizeof(order));
-
-        assert(order == N);
-
-        shape_type shape;
-        for (size_type n = 0; n < N; ++n)
-            file.read((char*)&shape[n], sizeof(shape[n]));
-
-        reshape(shape);
-
-        file.read((char*)_data, size() * sizeof(value_type));
-    }
-
-    __host__ void
-    read(const char* filename)
-    {
-        std::ifstream file(filename);
-        read(file);
-    }
-
     template <typename U, typename alloc>
-    __host__ void
-    operator<<(const lumina::tensor<N, U, alloc>& t)
+    __host__
+    void operator<<(const lumina::tensor<N, U, alloc>& t)
     {
         static_assert(sizeof(T) == sizeof(U));
         reshape(shape_type(t.shape()));
@@ -489,8 +399,8 @@ public:
     }
 
     template <typename U, typename alloc>
-    __host__ void
-    operator>>(lumina::tensor<N, U, alloc>& t) const
+    __host__
+    void operator>>(lumina::tensor<N, U, alloc>& t) const
     {
         static_assert(sizeof(T) == sizeof(U));
         t.reshape(_shape.operator lumina::shape<N>());

@@ -23,7 +23,7 @@
 */
 
 #include "base/image.hpp"
-#include "util/log.hpp"
+#include "utility/log.hpp"
 
 namespace lumina {
 
@@ -31,10 +31,10 @@ namespace lumina {
 
 template <>
 template <>
-array<byte>
+tensor<1, byte>
 image<gray>::encode<image<gray>::format::png>() const
 {
-    array<byte> buffer;
+    tensor<1, byte> buffer;
 
     png::image<png::gray_pixel> img(_shape[0], _shape[1]);
     for (unsigned y = 0; y < _shape[1]; ++y) {
@@ -58,10 +58,10 @@ image<gray>::encode<image<gray>::format::png>() const
 
 template <>
 template <>
-array<byte>
+tensor<1, byte>
 image<bool>::encode<image<bool>::format::png>() const
 {
-    array<byte> buffer;
+    tensor<1, byte> buffer;
 
     png::image<png::gray_pixel_1> img(_shape[0], _shape[1]);
     for (unsigned y = 0; y < _shape[1]; ++y) {
@@ -86,7 +86,7 @@ image<bool>::encode<image<bool>::format::png>() const
 template <>
 template <>
 void
-image<gray>::decode<image<gray>::format::png>(const array<byte>& buffer)
+image<gray>::decode<image<gray>::format::png>(const tensor<1, byte>& buffer)
 {
     std::stringstream ss;
     ss.write((char*)buffer.data(), buffer.size());
@@ -107,17 +107,17 @@ template <>
 template <>
 void
 image<bool>::decode<image<bool>::format::png>(
-    [[maybe_unused]] const array<byte>& buffer)
+    [[maybe_unused]] const tensor<1, byte>& buffer)
 {}
 
 // PNG RGB
 
 template <>
 template <>
-array<byte>
+tensor<1, byte>
 image<rgb>::encode<image<rgb>::format::png>() const
 {
-    array<byte> buffer;
+    tensor<1, byte> buffer;
 
     png::image<png::rgb_pixel> img(_shape[0], _shape[1]);
     for (unsigned y = 0; y < _shape[1]; ++y) {
@@ -142,7 +142,7 @@ image<rgb>::encode<image<rgb>::format::png>() const
 template <>
 template <>
 void
-image<rgb>::decode<image<rgb>::format::png>(const array<byte>& buffer)
+image<rgb>::decode<image<rgb>::format::png>(const tensor<1, byte>& buffer)
 {
     std::stringstream ss;
     ss.write((char*)buffer.data(), buffer.size());
@@ -163,10 +163,10 @@ image<rgb>::decode<image<rgb>::format::png>(const array<byte>& buffer)
 
 template <>
 template <>
-array<byte>
+tensor<1, byte>
 image<rgba>::encode<image<rgba>::format::png>() const
 {
-    array<byte> buffer;
+    tensor<1, byte> buffer;
 
     png::image<png::rgba_pixel> img(_shape[0], _shape[1]);
     for (size_type y = 0; y < _shape[1]; ++y) {
@@ -192,7 +192,7 @@ image<rgba>::encode<image<rgba>::format::png>() const
 template <>
 template <>
 void
-image<rgba>::decode<image<rgba>::format::png>(const array<byte>& buffer)
+image<rgba>::decode<image<rgba>::format::png>(const tensor<1, byte>& buffer)
 {
     std::stringstream ss;
     ss.write((char*)buffer.data(), buffer.size());
@@ -218,7 +218,7 @@ image<rgba>::decode<image<rgba>::format::png>(const array<byte>& buffer)
 
 template <>
 template <>
-array<byte>
+tensor<1, byte>
 image<gray>::encode<image<gray>::format::qoi>() const
 {
     log::error("image<gray>::encode<qoi> not implemented");
@@ -227,7 +227,7 @@ image<gray>::encode<image<gray>::format::qoi>() const
 
 template <>
 template <>
-array<byte>
+tensor<1, byte>
 image<bool>::encode<image<bool>::format::qoi>() const
 {
     log::error("image<gray>::encode<qoi> not implemented");
@@ -238,7 +238,7 @@ template <>
 template <>
 void
 image<gray>::decode<image<gray>::format::qoi>(
-    [[maybe_unused]] const array<byte>& buffer)
+    [[maybe_unused]] const tensor<1, byte>& buffer)
 {
     log::error("image<gray>::decode<qoi> not implemented");
 }
@@ -247,7 +247,7 @@ image<gray>::decode<image<gray>::format::qoi>(
 
 template <>
 template <>
-array<byte>
+tensor<1, byte>
 image<rgb>::encode<image<rgb>::format::qoi>() const
 {
     qoi_desc desc;
@@ -260,7 +260,7 @@ image<rgb>::encode<image<rgb>::format::qoi>() const
     byte* buffer_data =
         reinterpret_cast<byte*>(qoi_encode(_data, &desc, &buffer_length));
 
-    array<byte> buffer(buffer_length);
+    tensor<1, byte> buffer(buffer_length);
     for (int i = 0; i < buffer_length; ++i)
         buffer(i) = buffer_data[i];
 
@@ -270,7 +270,7 @@ image<rgb>::encode<image<rgb>::format::qoi>() const
 template <>
 template <>
 void
-image<rgb>::decode<image<rgb>::format::qoi>(const array<byte>& buffer)
+image<rgb>::decode<image<rgb>::format::qoi>(const tensor<1, byte>& buffer)
 {
     qoi_desc desc = {};
     void*    ptr  = qoi_decode(buffer.data(), buffer.size(), &desc, 0);
@@ -296,8 +296,7 @@ image<rgb>::decode<image<rgb>::format::qoi>(const array<byte>& buffer)
 
 template <>
 template <>
-array<byte>
-image<rgba>::encode<image<rgba>::format::qoi>() const
+tensor<1, byte> image<rgba>::encode<image<rgba>::format::qoi>() const
 {
     qoi_desc desc;
     desc.width      = _shape[0];
@@ -309,7 +308,7 @@ image<rgba>::encode<image<rgba>::format::qoi>() const
     byte* buffer_data =
         reinterpret_cast<byte*>(qoi_encode(_data, &desc, &buffer_length));
 
-    array<byte> buffer(buffer_length);
+    tensor<1, byte> buffer(buffer_length);
     for (int i = 0; i < buffer_length; ++i)
         buffer(i) = buffer_data[i];
 
@@ -320,7 +319,7 @@ template <>
 template <>
 void
 image<rgba>::decode<image<rgba>::format::qoi>(
-    [[maybe_unused]] const array<byte>& buffer)
+    [[maybe_unused]] const tensor<1, byte>& buffer)
 {}
 
 } // namespace lumina

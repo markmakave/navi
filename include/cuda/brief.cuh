@@ -120,7 +120,7 @@ public:
 
 private:
 
-    array<point_pair, managed_allocator<point_pair>> _net;
+    tensor<1, point_pair, managed_allocator<point_pair>> _net;
 };
 
 }

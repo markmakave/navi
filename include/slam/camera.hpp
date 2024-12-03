@@ -43,7 +43,7 @@
 #include "base/color.hpp"
 #include "base/image.hpp"
 
-#include "util/timer.hpp"
+#include "utility/timer.hpp"
 
 namespace lumina {
 namespace slam {
@@ -191,7 +191,7 @@ public:
 	}
 
 	camera&
-	operator>> (array<byte>& frame)
+	operator>> (tensor<1, byte>& frame)
 	{
 		if (!streaming)
 			start();
